@@ -66,6 +66,48 @@ favouriteBtns.forEach(btn => {
 
 
 /* modal logiikka */
+
+/* test data */
+const testWeeklyData = [
+  {
+    date: "maanantai 24. maaliskuuta",
+    courses: [
+      { name: "Kalamurekepihvejä", price: "Opiskelija 2.90 €", diets: ["G", "L", "M"] },
+      { name: "Kasvisbolognesea", price: "Opiskelija 2.90 €", diets: ["G", "ILM", "Veg"] },
+      { name: "Luomutäysjyväpastaa", price: "Opiskelija 2.90 €", diets: ["*", "L", "M"] }
+    ]
+  },
+  {
+    date: "tiistai 25. maaliskuuta",
+    courses: [
+      { name: "Broileria pekonikastikkeessa", price: "Opiskelija 2.90 €", diets: ["G", "L"] },
+      { name: "Tummaa riisiä", price: "Opiskelija 2.90 €", diets: ["*", "G", "Veg"] }
+    ]
+  },
+  {
+    date: "keskiviikko 26. maaliskuuta",
+    courses: [
+      { name: "Juustoista porkkanasosekeittoa", price: "Opiskelija 2.90 €", diets: ["G", "L"] },
+      { name: "Savupalvikastiketta", price: "Opiskelija 2.90 €", diets: ["A", "G", "L"] }
+    ]
+  },
+  {
+    date: "torstai 27. maaliskuuta",
+    courses: [
+      { name: "Lohikiusausta", price: "Opiskelija 5.60 €", diets: ["G", "L", "M"] },
+      { name: "Mausteista kikhernepataa", price: "Opiskelija 5.60 €", diets: ["G", "ILM", "Veg"] }
+    ]
+  },
+  {
+    date: "perjantai 28. maaliskuuta",
+    courses: [
+      { name: "Porsaan grillipihvi", price: "Opiskelija 5.60 €", diets: ["*", "G", "L"] },
+      { name: "Satokauden kasviksia", price: "Opiskelija 5.60 €", diets: ["G", "L", "Veg"] }
+    ]
+  }
+];
+/* test data */
+
 const modals = {
   login: document.getElementById('login_modal'),
   register: document.getElementById('register_modal'),
@@ -192,7 +234,7 @@ document.querySelectorAll('.card_show_menu').forEach(btn => {
       { name: "Falafelia", price: "Opiskelija 2.90 € / henkilökunta 8.23 €", diets: ["G", "ILM", "L", "Veg", "VS"] },
       { name: "Perunamuusia", price: "Opiskelija 2.90 € / henkilökunta 8.23 €", diets: ["*", "A", "G", "L"] },
     ];
-    openMenuModal('Ravintola 1', true, false, testData);
+    openMenuModal('Ravintola 1', true, false, testData, testWeeklyData);
   });
 });
 
