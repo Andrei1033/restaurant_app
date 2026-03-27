@@ -12,6 +12,7 @@
    <link rel="stylesheet" href="../css/main_style.css" />
    <!-- own js -->
    <script src="../js/map.js" defer></script>
+   <script src="../js/ui.js" defer></script>
    <title>Opiskelija ravintola compass</title>
 </head>
 <body>
@@ -25,132 +26,137 @@
          <button id="register_button">Rekisteröidy</button>
       </div>
       <div id="language_choice">
-         <select id="language_select">
-            <option value="fi">fi</option>
-            <option value="en">en</option>
-         </select>
+         <div id="language_choice">
+            <button class="lang-btn active" data-lang="fi">FI</button>
+            <span>|</span>
+            <button class="lang-btn" data-lang="en">EN</button>
+         </div>
       </div>
    </header>
 
    <div id="main_content_container">
       <div id="map_div">
          <div id="map"></div>
+   </div>
+
+   <div id="filters_div">
+      <div class="filter-group">
+         <label for="city_select">Kaupunki</label>
+         <select id="city_select">
+            <option value="">Kaikki kaupungit</option>
+            <option value="Helsinki">Helsinki</option>
+            <option value="Espoo">Espoo</option>
+            <option value="Tampere">Tampere</option>
+         </select>
       </div>
 
-      <div id="filters_div">
-         <div id="city_filter">
-            <p>Kaupunki</p>
-            <select id="city_select">
-               <option value="">Kaikki kaupungit</option>
-               <option value="Helsinki">Helsinki</option>
-               <option value="Espoo">Espoo</option>
-               <option value="Tampere">Tampere</option>
-            </select>
-         </div>
-         <div id="company_filter">
-            <p>Yhtiö</p>
-            <select id="company_select">
-               <option value="">Kaikki yhtiöt</option>
-               <option value="Unicafe">Unicafe</option>
-               <option value="Amica">Amica</option>
-               <option value="Sodexo">Sodexo</option>
-            </select>
-         </div>
+      <div class="filter-group">
+         <label for="company_select">Yhtiö</label>
+         <select id="company_select">
+            <option value="">Kaikki yhtiöt</option>
+            <option value="Unicafe">Unicafe</option>
+            <option value="Amica">Amica</option>
+            <option value="Sodexo">Sodexo</option>
+         </select>
+      </div>
+
+      <div class="filter-group">
+         <label for="search_input">Haku</label>
          <div id="search_bar">
             <input type="text" id="search_input" placeholder="Hae ravintoloita...">
          </div>
-         <div id="show_favourites">
-            <button id="favourites_button">Näytä suosikit</button>
+      </div>
+
+      <div id="show_favourites">
+         <button id="favourites_button">Näytä suosikit</button>
+      </div>
+   </div>
+
+   <div id="restaurant_cards">
+      <div class="card" id="card_1">
+         <div class="upper_card">
+            <div class="card_info">
+               <h2>Ravintola 1</h2>
+               <p><span id="card_1_city">Helsinki</span> | <span id="card_1_company">Unicafe</span></p>
+            </div>
+            <div class="card_indicators">
+               <span id="closest_indicator">Lähin</span>
+               <button class="card_favourite" id="card_1_favourite" aria-label="Lisää suosikkeihin">
+               <svg class="heart-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+               </svg>
+            </button>
+            </div>
+         </div>
+         <div class="lower_card">
+            <button class="card_show_menu" id="card_1_show_menu">Näytä valikko</button>
+            <button class="card_show_map" id="card_1_show_map">Näytä kartta</button>
          </div>
       </div>
 
-      <div id="restaurant_cards">
-         <div class="card" id="card_1">
-            <div class="upper_card">
-               <div class="card_info">
-                  <h2>Ravintola 1</h2>
-                  <p><span id="card_1_city">Helsinki</span> | <span id="card_1_company">Unicafe</span></p>
-               </div>
-               <div class="card_indicators">
-                  <span id="closest_indicator">Lähin</span>
-                  <button class="card_favourite" id="card_1_favourite" aria-label="Lisää suosikkeihin">
+      <div class="card" id="card_2">
+         <div class="upper_card">
+            <div class="card_info">
+               <h2>Ravintola 2</h2>
+               <p><span id="card_2_city">Espoo</span> | <span id="card_2_company">Amica</span></p>
+            </div>
+            <div class="card_indicators">
+               <span id="closest_indicator"></span>
+               <button class="card_favourite" id="card_2_favourite" aria-label="Lisää suosikkeihin">
                   <svg class="heart-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                   </svg>
                </button>
-               </div>
-            </div>
-            <div class="lower_card">
-               <button class="card_show_menu" id="card_1_show_menu">Näytä valikko</button>
-               <button class="card_show_map" id="card_1_show_map">Näytä kartta</button>
             </div>
          </div>
+         <div class="lower_card">
+            <button class="card_show_menu" id="card_2_show_menu">Näytä valikko</button>
+            <button class="card_show_map" id="card_2_show_map">Näytä kartta</button>
 
-         <div class="card" id="card_2">
-            <div class="upper_card">
-               <div class="card_info">
-                  <h2>Ravintola 2</h2>
-                  <p><span id="card_2_city">Espoo</span> | <span id="card_2_company">Amica</span></p>
-               </div>
-               <div class="card_indicators">
-                  <span id="closest_indicator"></span>
-                  <button class="card_favourite" id="card_2_favourite" aria-label="Lisää suosikkeihin">
-                     <svg class="heart-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                     </svg>
-                  </button>
-               </div>
+         </div>
+      </div>
+
+      <div class="card" id="card_3">
+         <div class="upper_card">
+            <div class="card_info">
+               <h2>Ravintola 3</h2>
+               <p><span id="card_3_city">Tampere</span> | <span id="card_3_company">Starbucks</span></p>
             </div>
-            <div class="lower_card">
-               <button class="card_show_menu" id="card_2_show_menu">Näytä valikko</button>
-               <button class="card_show_map" id="card_2_show_map">Näytä kartta</button>
-
+            <div class="card_indicators">
+               <span id="closest_indicator"></span>
+               <button class="card_favourite" id="card_3_favourite" aria-label="Lisää suosikkeihin">
+                  <svg class="heart-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+               </button>
             </div>
          </div>
+         <div class="lower_card">
+            <p class="empty_menu" id="card_3_empty_menu">Valikko ei ole saatavissa</p>
+            <button class="card_show_menu" id="card_3_show_menu_empty">Näytä valikko</button>
+            <button class="card_show_map" id="card_3_show_map">Näytä kartta</button>
+         </div>
+      </div>
 
-         <div class="card" id="card_3">
-            <div class="upper_card">
-               <div class="card_info">
-                  <h2>Ravintola 3</h2>
-                  <p><span id="card_3_city">Tampere</span> | <span id="card_3_company">Starbucks</span></p>
-               </div>
-               <div class="card_indicators">
-                  <span id="closest_indicator"></span>
-                  <button class="card_favourite" id="card_3_favourite" aria-label="Lisää suosikkeihin">
-                     <svg class="heart-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                     </svg>
-                  </button>
-               </div>
+      <div class="card" id="card_4">
+         <div class="upper_card">
+            <div class="card_info">
+               <h2>Ravintola 4</h2>
+               <p><span id="card_4_city">Vantaa</span> | <span id="card_4_company">Burger King</span></p>
             </div>
-            <div class="lower_card">
-               <p class="empty_menu" id="card_3_empty_menu">Valikko ei ole saatavissa</p>
-               <button class="card_show_menu" id="card_3_show_menu_empty">Näytä valikko</button>
-               <button class="card_show_map" id="card_3_show_map">Näytä kartta</button>
+            <div class="card_indicators">
+               <span id="closest_indicator"></span>
+               <button class="card_favourite" id="card_4_favourite" aria-label="Lisää suosikkeihin">
+                  <svg class="heart-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+               </button>
             </div>
          </div>
-
-         <div class="card" id="card_4">
-            <div class="upper_card">
-               <div class="card_info">
-                  <h2>Ravintola 4</h2>
-                  <p><span id="card_4_city">Vantaa</span> | <span id="card_4_company">Burger King</span></p>
-               </div>
-               <div class="card_indicators">
-                  <span id="closest_indicator"></span>
-                  <button class="card_favourite" id="card_4_favourite" aria-label="Lisää suosikkeihin">
-                     <svg class="heart-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                     </svg>
-                  </button>
-               </div>
-            </div>
-            <div class="lower_card">
-               <button class="card_show_menu" id="card_4_show_menu">Näytä valikko</button>
-               <button class="card_show_map" id="card_4_show_map">Näytä kartta</button>
-            </div>
+         <div class="lower_card">
+            <button class="card_show_menu" id="card_4_show_menu">Näytä valikko</button>
+            <button class="card_show_map" id="card_4_show_map">Näytä kartta</button>
          </div>
-
       </div>
    </div>
 

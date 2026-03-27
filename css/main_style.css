@@ -63,7 +63,7 @@ header {
 
 #language_choice {
    margin-left: 20px;
-   margin-right: 35px;
+   margin-right: 15px;
 }
 
 /* header buttons */
@@ -97,20 +97,108 @@ header {
    opacity: 0.8;
 }
 
-#language_select {
-   border: 0px solid #cccccc00;
-   background-color: #ffffff00;
-   font-family: 'Open Sans', sans-serif;
-   font-size: 17px;
-   cursor: pointer;
-   outline: none;
+/* language select */
+.lang-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-family: 'Open Sans', sans-serif;
+  color: #888;
+  padding: 4px;
+  text-transform: uppercase;
+  transition: color 0.2s;
 }
 
-#language_select:hover {
-   color: rgba(4, 53, 88);
+.lang-btn.active {
+  color: rgba(4, 53, 88);
+  font-weight: 700;
 }
 
+.lang-btn:hover {
+  color: rgba(4, 53, 88);
+}
 
+#language_choice span {
+  color: #ccc;
+}
+
+/* filters */
+#filters_div {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 20px;
+  background-color: rgba(251, 247, 238);
+  border-bottom: 2px solid rgb(225, 224, 220);
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-group label {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(4, 53, 88);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.filter-group select {
+  padding: 6px 12px;
+  border: 1px solid rgb(225, 224, 220);
+  border-radius: 5px;
+  background-color: #fff;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  color: rgba(4, 53, 88);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.filter-group select:hover,
+.filter-group select:focus {
+  border-color: rgba(4, 53, 88);
+}
+
+#search_bar input {
+  padding: 6px 12px;
+  border: 1px solid rgb(225, 224, 220);
+  border-radius: 5px;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  color: rgba(4, 53, 88);
+  outline: none;
+  transition: border-color 0.2s;
+  width: 200px;
+}
+
+#search_bar input:focus {
+  border-color: rgba(4, 53, 88);
+}
+
+#favourites_button {
+  padding: 6px 16px;
+  background-color: transparent;
+  border: 1px solid rgba(4, 53, 88);
+  border-radius: 5px;
+  color: rgba(4, 53, 88);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+  margin-top: 18px;
+}
+
+#favourites_button:hover,
+#favourites_button.active {
+  background-color: rgba(4, 53, 88);
+  color: #fff;
+}
 
 
 
