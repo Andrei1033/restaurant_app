@@ -70,6 +70,7 @@ const modals = {
   login: document.getElementById('login_modal'),
   register: document.getElementById('register_modal'),
   profile: document.getElementById('profile_modal'),
+  menu: document.getElementById('menu_modal'),
 };
 
 const openModal = (name) => {
@@ -116,26 +117,33 @@ const menuModalClosest = document.getElementById('menu_modal_closest');
 const menuModalFavourite = document.getElementById('menu_modal_favourite');
 
 /* avaa menu modal — myöhemmin kutsutaan API-datalla */
-const openMenuModal = (restaurantName, isClosest, isFavourite, courses) => {
+const openMenuModal = (restaurantName, isClosest, isFavourite, dailyCourses, weeklyDays) => {
   menuModalName.textContent = restaurantName;
-
-  // lähin badge
   menuModalClosest.style.display = isClosest ? 'inline-block' : 'none';
 
-  // sydän
   if (isFavourite) {
     menuModalFavourite.classList.add('active');
   } else {
     menuModalFavourite.classList.remove('active');
   }
 
-  // täytä menu lista
-  renderDailyMenu(courses);
+  // tallenna data tab-vaihtoa varten
+  currentDailyData = dailyCourses;
+  currentWeeklyData = weeklyDays;
+
+  // näytä päivän menu oletuksena
+  document.getElementById('tab_daily').classList.add('active');
+  document.getElementById('tab_weekly').classList.remove('active');
+  renderDailyMenu(dailyCourses);
 
   menuModal.classList.add('active');
 };
 
 /* renderöi päivän menu */
+
+let currentDailyData = [];
+let currentWeeklyData = [];
+
 const renderDailyMenu = (courses) => {
   if (!courses || courses.length === 0) {
     menuModalBody.innerHTML = '<p class="menu-empty">Ei menua tänään</p>';
@@ -154,16 +162,16 @@ const renderDailyMenu = (courses) => {
 };
 
 /* tab vaihto */
-document.getElementById('tab_daily').addEventListener('click', () => {
-  document.getElementById('tab_daily').classList.add('active');
-  document.getElementById('tab_weekly').classList.remove('active');
-  // myöhemmin: hae päivän data API:sta
-});
-
 document.getElementById('tab_weekly').addEventListener('click', () => {
   document.getElementById('tab_weekly').classList.add('active');
   document.getElementById('tab_daily').classList.remove('active');
-  // myöhemmin: hae viikon data API:sta
+  renderWeeklyMenu(currentWeeklyData);
+});
+
+document.getElementById('tab_daily').addEventListener('click', () => {
+  document.getElementById('tab_daily').classList.add('active');
+  document.getElementById('tab_weekly').classList.remove('active');
+  renderDailyMenu(currentDailyData);
 });
 
 /* sulje */
@@ -172,14 +180,13 @@ menuModal.addEventListener('click', (e) => {
   if (e.target === menuModal) closeModal('menu');
 });
 
-/* sydän toggle modalissa */
-menuModalFavourite.addEventListener('click', () => {
-  menuModalFavourite.classList.toggle('active');
-});
-
 /* testaa modalia — POISTA kun API kytketään */
 document.querySelectorAll('.card_show_menu').forEach(btn => {
   btn.addEventListener('click', () => {
+      if (btn.classList.contains('card_show_menu_empty')) {
+         return; // stop here
+      }
+
     const testData = [
       { name: "Pariloitu broilerinfilee", price: "Opiskelija 2.90 € / henkilökunta 8.23 €", diets: ["G", "L", "M"] },
       { name: "Falafelia", price: "Opiskelija 2.90 € / henkilökunta 8.23 €", diets: ["G", "ILM", "L", "Veg", "VS"] },
@@ -188,6 +195,29 @@ document.querySelectorAll('.card_show_menu').forEach(btn => {
     openMenuModal('Ravintola 1', true, false, testData);
   });
 });
+
+/* rendre weekly menu */
+const renderWeeklyMenu = (days) => {
+  if (!days || days.length === 0) {
+    menuModalBody.innerHTML = '<p class="menu-empty">Ei viikon menua saatavilla</p>';
+    return;
+  }
+
+  menuModalBody.innerHTML = days.map(day => `
+    <div class="menu-day">
+      <p class="menu-day-title">${day.date}</p>
+      ${day.courses.map(course => `
+        <div class="menu-item">
+          <p class="menu-item-name">${course.name.trim()}</p>
+          ${course.price ? `<p class="menu-item-price">${course.price}</p>` : ''}
+          <div class="menu-item-diets">
+            ${course.diets.map(diet => `<span class="diet-badge">${diet}</span>`).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+};
 
 
 

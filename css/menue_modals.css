@@ -8,11 +8,12 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .menu-modal-title h2 {
   margin-bottom: 6px;
+  margin-top: 0px;
 }
 
 .menu-modal-badges {
@@ -141,4 +142,25 @@
   padding: 12px 0 6px 0;
   border-bottom: 2px solid rgba(4, 53, 88, 0.15);
   margin-bottom: 4px;
+}
+
+.menu-day {
+  margin-bottom: 1rem;
+}
+
+.menu-day:last-child {
+  margin-bottom: 0;
+}
+
+.menu-day-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #fff;
+  background: rgba(4, 53, 88);
+  padding: 5px 12px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-bottom: 6px;
 }
