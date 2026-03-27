@@ -5,6 +5,7 @@ body {
    font-family: 'Open Sans', sans-serif;
    font-size: 16px;
    line-height: 1.6;
+   background-color: rgb(251, 247, 238);;
 }
 
 /* Headings - Inter */
@@ -126,11 +127,12 @@ header {
 /* filters */
 #filters_div {
   display: flex;
-  gap: 12px;
+  gap: 3vh;
   align-items: center;
   padding: 12px 20px;
   background-color: rgba(251, 247, 238);
   border-bottom: 2px solid rgb(225, 224, 220);
+  border-top: 2px solid rgb(225, 224, 220);
   flex-wrap: wrap;
 }
 
@@ -146,28 +148,86 @@ header {
   color: rgba(4, 53, 88);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  margin-left: 1vh;
 }
 
-.filter-group select {
-  padding: 6px 12px;
+.custom-select {
+  position: relative;
+  width: 180px;
+  user-select: none;
+}
+
+.select-selected {
+  background-color: #fff;
   border: 1px solid rgb(225, 224, 220);
   border-radius: 5px;
-  background-color: #fff;
+  padding: 6px 36px 6px 12px;
   font-family: 'Open Sans', sans-serif;
   font-size: 14px;
   color: rgba(4, 53, 88);
   cursor: pointer;
-  outline: none;
   transition: border-color 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.filter-group select:hover,
-.filter-group select:focus {
+.select-selected::after {
+  content: "▾";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(4, 53, 88);
+  font-size: 18px;
+  transition: transform 0.2s;
+}
+
+.custom-select.open .select-selected {
   border-color: rgba(4, 53, 88);
 }
 
+.custom-select.open .select-selected::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.select-items {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid rgb(225, 224, 220);
+  border-radius: 5px;
+  z-index: 99;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.select-items div {
+  padding: 8px 12px;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  color: rgba(4, 53, 88);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.select-items div:hover {
+  background-color: rgba(4, 53, 88, 0.06);
+}
+
+.select-items div.selected {
+  font-weight: 600;
+  background-color: rgba(4, 53, 88, 0.1);
+}
+
+.select-hide {
+  display: none;
+}
+
 #search_bar input {
-  padding: 6px 12px;
+  padding: 7px 12px;
   border: 1px solid rgb(225, 224, 220);
   border-radius: 5px;
   font-family: 'Open Sans', sans-serif;
@@ -182,8 +242,12 @@ header {
   border-color: rgba(4, 53, 88);
 }
 
+#show_favourites{
+   margin-left: auto;
+}
+
 #favourites_button {
-  padding: 6px 16px;
+  padding: 8px 16px;
   background-color: transparent;
   border: 1px solid rgba(4, 53, 88);
   border-radius: 5px;
@@ -191,15 +255,171 @@ header {
   cursor: pointer;
   font-size: 13px;
   transition: all 0.2s;
-  margin-top: 18px;
+  margin-top: 21px;
 }
 
 #favourites_button:hover,
 #favourites_button.active {
-  background-color: rgba(4, 53, 88);
-  color: #fff;
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
+/* card*/
+#restaurant_cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+  padding: 2rem;
+  width: 90%;
+  margin: 0 auto;
+}
+
+.card {
+  flex: 1 1 300px;
+  max-width: 400px;
+  background: #fff;
+  border: 1px solid rgb(225, 224, 220);
+  border-radius: 12px;
+  padding: 1.2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 24px rgba(4, 53, 88, 0.15);
+}
+
+.card_indicators {
+   display: grid;
+}
+
+/* card upper part — name, city, heart button */
+.upper_card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  min-height: 68px;
+}
+
+.card_info h2 {
+  font-size: 1.1rem;
+  margin-top: 3px;
+  margin-bottom: 4px;
+  color: rgba(4, 53, 88);
+}
+
+.card_info p {
+  font-size: 13px;
+  color: #888;
+  margin: 0;
+}
+
+/* closest indicator */
+#closest_indicator {
+   font-size: 11px;
+   font-weight: 600;
+   color: rgba(4, 53, 88);
+   background: rgba(4, 53, 88, 0.08);
+   padding: 3px 8px;
+   border-radius: 20px;
+   margin-bottom: 1.5vh;
+   white-space: nowrap;
+}
+
+/* heart button */
+.card_favourite {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  margin-left: 0px;
+}
+
+.heart-icon {
+  width: 30px;
+  height: auto;
+  fill: none;
+  stroke: red;
+  stroke-width: 2;
+  transition: transform 0.2s ease, fill 0.2s ease;
+}
+
+.card_favourite:hover .heart-icon {
+  stroke: #e24b4a;
+}
+
+.card_favourite.active .heart-icon {
+  fill: #e24b4a;
+  stroke: #e24b4a;
+}
+
+.card_favourite:active .heart-icon {
+  transform: scale(0.85);
+}
+
+/* card lower part§ — buttons */
+.lower_card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid rgb(225, 224, 220);
+  padding-top: 1rem;
+}
+
+.card_show_menu {
+  width: 100%;
+  padding: 8px;
+  background-color: rgba(4, 53, 88);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: opacity 0.2s;
+}
+
+.card_show_menu:hover {
+  opacity: 0.85;
+}
+
+.card_show_map {
+  width: 100%;
+  padding: 8px;
+  background-color: transparent;
+  color: rgba(4, 53, 88);
+  border: 1px solid rgba(4, 53, 88);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.card_show_map:hover {
+   background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* empty menu -warning */
+.empty_menu {
+  font-size: 12px;
+  color: #9a6700;
+  background: #faeeda;
+  border-radius: 5px;
+  padding: 5px 10px;
+  margin: 0 0 6px 0;
+}
+
+.card_show_menu_empty{
+   background-color: #a4a4a4 !important;
+   color: #fff !important;
+   border: none !important;
+   border-radius: 6px !important;
+   cursor: pointer !important;
+   font-size: 13px !important;
+   transition: opacity 0.2s  !important;
+}
 
 
 #map {
@@ -222,19 +442,4 @@ header {
   outline: none;
 }
 
-.heart-icon {
-  width: 40px;
-  height: 40px;
-  fill: none;
-  stroke: red;
-  stroke-width: 2;
-  transition: transform 0.2s ease, fill 0.2s ease;
-}
 
-#card_1_favourite.active .heart-icon {
-  fill: red;
-}
-
-#card_1_favourite:active .heart-icon {
-  transform: scale(0.9);
-}

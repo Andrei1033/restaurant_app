@@ -1,0 +1,144 @@
+/* iso modal menu varten */
+.modal-large {
+  max-width: 560px;
+}
+
+/* menu modal header */
+.menu-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.menu-modal-title h2 {
+  margin-bottom: 6px;
+}
+
+.menu-modal-badges {
+  display: flex;
+  gap: 8px;
+}
+
+.closest-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(4, 53, 88);
+  background: rgba(4, 53, 88, 0.08);
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+/* tab napit */
+.menu-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1.2rem;
+  border-bottom: 2px solid rgb(225, 224, 220);
+  padding-bottom: 0;
+}
+
+.menu-tab {
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.menu-tab:hover {
+  color: rgba(4, 53, 88);
+}
+
+.menu-tab.active {
+  color: rgba(4, 53, 88);
+  border-bottom: 2px solid rgba(4, 53, 88);
+}
+
+/* menu lista */
+.menu-modal-body {
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-bottom: 1rem;
+}
+
+.menu-modal-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.menu-modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.menu-modal-body::-webkit-scrollbar-thumb {
+  background: rgb(225, 224, 220);
+  border-radius: 4px;
+}
+
+/* yksittäinen ruoka */
+.menu-item {
+  padding: 12px 0;
+  border-bottom: 1px solid rgb(225, 224, 220);
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(4, 53, 88);
+  margin-bottom: 4px;
+}
+
+.menu-item-price {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 6px;
+}
+
+/* dieetti badget */
+.menu-item-diets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.diet-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: rgba(4, 53, 88, 0.08);
+  color: rgba(4, 53, 88);
+}
+
+/* tyhjä menu */
+.menu-empty {
+  text-align: center;
+  padding: 2rem;
+  color: #888;
+  font-size: 14px;
+}
+
+/* viikon menu päivä-otsikko */
+.menu-day-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(4, 53, 88);
+  padding: 12px 0 6px 0;
+  border-bottom: 2px solid rgba(4, 53, 88, 0.15);
+  margin-bottom: 4px;
+}

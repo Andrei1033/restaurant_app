@@ -10,11 +10,134 @@
 
    <!-- own css -->
    <link rel="stylesheet" href="../css/main_style.css" />
+   <link rel="stylesheet" href="../css/login_modals.css">
+   <link rel="stylesheet" href="../css/menue_modals.css">
    <!-- own js -->
    <script src="../js/map.js" defer></script>
    <script src="../js/ui.js" defer></script>
    <title>Opiskelija ravintola compass</title>
 </head>
+
+<!-- Login modal -->
+<div class="modal-overlay" id="login_modal">
+  <div class="modal">
+    <h2>Kirjaudu sisään</h2>
+    <div class="modal-body">
+      <div class="input-group">
+        <label for="login_username">Käyttäjänimi</label>
+        <input type="text" id="login_username" placeholder="Käyttäjänimi">
+      </div>
+      <div class="input-group">
+        <label for="login_password">Salasana</label>
+        <input type="password" id="login_password" placeholder="Salasana">
+      </div>
+      <p class="modal-error" id="login_error"></p>
+    </div>
+    <div class="modal-footer">
+      <p class="modal-switch">Ei tiliä? <span id="switch_to_register">Rekisteröidy</span></p>
+      <button class="modal-close-btn" id="login_close">Sulje</button>
+      <button class="modal-submit-btn" id="login_submit">Kirjaudu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Register modal -->
+<div class="modal-overlay" id="register_modal">
+  <div class="modal">
+    <h2>Rekisteröidy</h2>
+    <div class="modal-body">
+      <div class="input-group">
+        <label for="register_username">Käyttäjänimi</label>
+        <input type="text" id="register_username" placeholder="Käyttäjänimi">
+      </div>
+      <div class="input-group">
+        <label for="register_email">Sähköposti</label>
+        <input type="email" id="register_email" placeholder="sähköposti@example.com">
+      </div>
+      <div class="input-group">
+        <label for="register_password">Salasana</label>
+        <input type="password" id="register_password" placeholder="Salasana">
+      </div>
+      <p class="modal-error" id="register_error"></p>
+    </div>
+    <div class="modal-footer">
+      <p class="modal-switch">On jo tili? <span id="switch_to_login">Kirjaudu</span></p>
+      <button class="modal-close-btn" id="register_close">Sulje</button>
+      <button class="modal-submit-btn" id="register_submit">Rekisteröidy</button>
+    </div>
+  </div>
+</div>
+
+<!-- Profile modal -->
+<div class="modal-overlay" id="profile_modal">
+  <div class="modal">
+    <h2>Profiili</h2>
+    <div class="modal-body">
+      <div class="profile-avatar-section">
+        <img src="../assets/tremplate_profile.jpg" alt="avatar" id="profile_avatar_preview">
+        <label for="profile_avatar_input" class="avatar-upload-btn">Vaihda kuva</label>
+        <input type="file" id="profile_avatar_input" accept="image/*" style="display:none">
+      </div>
+      <div class="input-group">
+        <label for="profile_username">Käyttäjänimi</label>
+        <input type="text" id="profile_username" placeholder="Käyttäjänimi">
+      </div>
+      <div class="input-group">
+        <label for="profile_email">Sähköposti</label>
+        <input type="email" id="profile_email" placeholder="Sähköposti">
+      </div>
+      <div class="input-group">
+        <label for="profile_password">Uusi salasana</label>
+        <input type="password" id="profile_password" placeholder="Jätä tyhjäksi jos ei muutosta">
+      </div>
+      <p class="modal-error" id="profile_error"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-close-btn" id="profile_close">Sulje</button>
+      <button class="modal-submit-btn" id="profile_submit">Tallenna</button>
+    </div>
+  </div>
+</div>
+
+<!-- Menu modal -->
+<div class="modal-overlay" id="menu_modal">
+  <div class="modal modal-large">
+
+    <!-- header -->
+    <div class="menu-modal-header">
+      <div class="menu-modal-title">
+        <h2 id="menu_modal_name">Ravintola nimi</h2>
+        <div class="menu-modal-badges">
+          <span class="closest-badge" id="menu_modal_closest">Lähin</span>
+        </div>
+      </div>
+      <button class="card_favourite" id="menu_modal_favourite" aria-label="Lisää suosikkeihin">
+        <svg class="heart-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- tab napit -->
+    <div class="menu-tabs">
+      <button class="menu-tab active" id="tab_daily">Päivän menu</button>
+      <button class="menu-tab" id="tab_weekly">Viikon menu</button>
+    </div>
+
+    <!-- menu lista -->
+    <div class="menu-modal-body" id="menu_modal_body">
+      <!-- JS täyttää tämän -->
+    </div>
+
+    <!-- footer -->
+    <div class="modal-footer">
+      <button class="modal-close-btn" id="menu_close">Sulje</button>
+      <button class="modal-submit-btn" id="menu_show_map">Näytä kartalla</button>
+    </div>
+
+  </div>
+</div>
+
 <body>
    <header>
       <div id="title">
@@ -24,6 +147,11 @@
       <div id="login_buttons">
          <button id="login_button">Kirjaudu sisään</button>
          <button id="register_button">Rekisteröidy</button>
+      </div>
+      <!-- näkyy vain kirjautuneelle -->
+      <div id="user_profile" style="display:auto">
+         <img src="../assets/tremplate_profile.jpg" alt="avatar" id="header_avatar">
+         <span id="header_username"></span>
       </div>
       <div id="language_choice">
          <div id="language_choice">
@@ -41,23 +169,29 @@
 
    <div id="filters_div">
       <div class="filter-group">
-         <label for="city_select">Kaupunki</label>
-         <select id="city_select">
-            <option value="">Kaikki kaupungit</option>
-            <option value="Helsinki">Helsinki</option>
-            <option value="Espoo">Espoo</option>
-            <option value="Tampere">Tampere</option>
-         </select>
+         <label>Kaupunki</label>
+         <div class="custom-select" id="city_select">
+            <div class="select-selected">Kaikki kaupungit</div>
+            <div class="select-items select-hide">
+            <div data-value="">Kaikki kaupungit</div>
+            <div data-value="Helsinki">Helsinki</div>
+            <div data-value="Espoo">Espoo</div>
+            <div data-value="Tampere">Tampere</div>
+            </div>
+         </div>
       </div>
 
       <div class="filter-group">
-         <label for="company_select">Yhtiö</label>
-         <select id="company_select">
-            <option value="">Kaikki yhtiöt</option>
-            <option value="Unicafe">Unicafe</option>
-            <option value="Amica">Amica</option>
-            <option value="Sodexo">Sodexo</option>
-         </select>
+         <label>Yhtiö</label>
+         <div class="custom-select" id="company_select">
+            <div class="select-selected">Kaikki yhtiöt</div>
+            <div class="select-items select-hide">
+            <div data-value="">Kaikki yhtiöt</div>
+            <div data-value="Unicafe">Unicafe</div>
+            <div data-value="Amica">Amica</div>
+            <div data-value="Sodexo">Sodexo</div>
+            </div>
+         </div>
       </div>
 
       <div class="filter-group">
@@ -101,7 +235,7 @@
                <p><span id="card_2_city">Espoo</span> | <span id="card_2_company">Amica</span></p>
             </div>
             <div class="card_indicators">
-               <span id="closest_indicator"></span>
+
                <button class="card_favourite" id="card_2_favourite" aria-label="Lisää suosikkeihin">
                   <svg class="heart-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -123,7 +257,7 @@
                <p><span id="card_3_city">Tampere</span> | <span id="card_3_company">Starbucks</span></p>
             </div>
             <div class="card_indicators">
-               <span id="closest_indicator"></span>
+
                <button class="card_favourite" id="card_3_favourite" aria-label="Lisää suosikkeihin">
                   <svg class="heart-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -133,7 +267,7 @@
          </div>
          <div class="lower_card">
             <p class="empty_menu" id="card_3_empty_menu">Valikko ei ole saatavissa</p>
-            <button class="card_show_menu" id="card_3_show_menu_empty">Näytä valikko</button>
+            <button class="card_show_menu card_show_menu_empty">Näytä valikko</button>
             <button class="card_show_map" id="card_3_show_map">Näytä kartta</button>
          </div>
       </div>
@@ -145,7 +279,7 @@
                <p><span id="card_4_city">Vantaa</span> | <span id="card_4_company">Burger King</span></p>
             </div>
             <div class="card_indicators">
-               <span id="closest_indicator"></span>
+
                <button class="card_favourite" id="card_4_favourite" aria-label="Lisää suosikkeihin">
                   <svg class="heart-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
