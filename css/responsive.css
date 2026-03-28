@@ -52,9 +52,42 @@
     margin-left: 0;
   }
 
-  #favourites_button {
+ /* #favourites_button {
     margin-top: 0;
-  }
+  }*/
+}
+
+@media (max-width: 688px) {
+   /* filters — pino allekkain */
+   #filters_div {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      padding: 12px;
+   }
+
+   .filter-group {
+      width: 100%;
+   }
+
+   .custom-select {
+      width: 100%;
+   }
+
+   #search_bar input {
+      width: 100%;
+      box-sizing: border-box;
+   }
+
+   #show_favourites {
+      width: 100%;
+   }
+
+   #favourites_button {
+      width: 100%;
+      margin-top: 0;
+      text-align: center;
+   }
 }
 
 /* Puhelin — 600px ja alle */
@@ -103,37 +136,6 @@
     grid-column: 3;
     grid-row: 1;
     margin: 0;
-  }
-
-  /* filters — pino allekkain */
-  #filters_div {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    padding: 12px;
-  }
-
-  .filter-group {
-    width: 100%;
-  }
-
-  .custom-select {
-    width: 100%;
-  }
-
-  #search_bar input {
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  #show_favourites {
-    width: 100%;
-  }
-
-  #favourites_button {
-    width: 100%;
-    margin-top: 0;
-    text-align: center;
   }
 
   /* kortit — yksi per rivi */
