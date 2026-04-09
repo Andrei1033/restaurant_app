@@ -1,4 +1,4 @@
-/* language select */
+/* language select ui*/
 const langBtns = document.querySelectorAll('.lang-btn');
 
 langBtns.forEach(btn => {
@@ -11,7 +11,7 @@ langBtns.forEach(btn => {
   });
 });
 
-// filters
+// filters dropdown
 const customSelects = document.querySelectorAll('.custom-select');
 
 customSelects.forEach(select => {
@@ -55,59 +55,59 @@ document.addEventListener('click', (e) => {
   });
 });
 
-/* add to favourites */
-const favouriteBtns = document.querySelectorAll('.card_favourite');
+/* generate one card by api data*/
+const createCard = (restaurant, isClosest) => {
+  const card = document.createElement('div');
+  card.classList.add('card');
+   card.dataset.id = restaurant._id;
+   card.dataset.city = restaurant.city;
+   card.dataset.company = restaurant.company;
 
-favouriteBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    btn.classList.toggle('active');
-  });
-});
+   card.innerHTML = `
+      <div class="upper_card">
+         <div class="card_info">
+         <h2>${restaurant.name}</h2>
+         <p>${restaurant.city} | ${restaurant.company}</p>
+         </div>
+         <div class="card_indicators">
+         ${isClosest ? '<span class="closest_indicator">Lähin</span>' : ''}
+         <button class="card_favourite" aria-label="Lisää suosikkeihin">
+            <svg class="heart-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+         </button>
+         </div>
+      </div>
+      <div class="lower_card">
+         <button class="card_show_menu">Näytä valikko</button>
+         <button class="card_show_map">Näytä kartta</button>
+      </div>
+   `;
+
+   /* favourite button */
+   card.querySelector('.card_favourite').addEventListener('click', (e) => {
+      e.currentTarget.classList.toggle('active');
+   });
+
+   /* show menu */
+   card.querySelector('.card_show_menu').addEventListener('click', async () => {
+      const dailyCourses = await getDailyMenu(restaurant._id, currentLang);
+      const weeklyDays = await getWeeklyMenu(restaurant._id, currentLang);
+      openMenuModal(restaurant.name, isClosest, false, dailyCourses, weeklyDays);
+   });
+
+   /* show on map */
+   card.querySelector('.card_show_map').addEventListener('click', () => {
+      const [lat, lng] = restaurant.location.coordinates;
+      map.setView([lat, lng], 16);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+   });
+
+   return card;
+};
 
 
 /* modal logiikka */
-
-/* test data */
-const testWeeklyData = [
-  {
-    date: "maanantai 24. maaliskuuta",
-    courses: [
-      { name: "Kalamurekepihvejä", price: "Opiskelija 2.90 €", diets: ["G", "L", "M"] },
-      { name: "Kasvisbolognesea", price: "Opiskelija 2.90 €", diets: ["G", "ILM", "Veg"] },
-      { name: "Luomutäysjyväpastaa", price: "Opiskelija 2.90 €", diets: ["*", "L", "M"] }
-    ]
-  },
-  {
-    date: "tiistai 25. maaliskuuta",
-    courses: [
-      { name: "Broileria pekonikastikkeessa", price: "Opiskelija 2.90 €", diets: ["G", "L"] },
-      { name: "Tummaa riisiä", price: "Opiskelija 2.90 €", diets: ["*", "G", "Veg"] }
-    ]
-  },
-  {
-    date: "keskiviikko 26. maaliskuuta",
-    courses: [
-      { name: "Juustoista porkkanasosekeittoa", price: "Opiskelija 2.90 €", diets: ["G", "L"] },
-      { name: "Savupalvikastiketta", price: "Opiskelija 2.90 €", diets: ["A", "G", "L"] }
-    ]
-  },
-  {
-    date: "torstai 27. maaliskuuta",
-    courses: [
-      { name: "Lohikiusausta", price: "Opiskelija 5.60 €", diets: ["G", "L", "M"] },
-      { name: "Mausteista kikhernepataa", price: "Opiskelija 5.60 €", diets: ["G", "ILM", "Veg"] }
-    ]
-  },
-  {
-    date: "perjantai 28. maaliskuuta",
-    courses: [
-      { name: "Porsaan grillipihvi", price: "Opiskelija 5.60 €", diets: ["*", "G", "L"] },
-      { name: "Satokauden kasviksia", price: "Opiskelija 5.60 €", diets: ["G", "L", "Veg"] }
-    ]
-  }
-];
-/* test data */
-
 const modals = {
   login: document.getElementById('login_modal'),
   register: document.getElementById('register_modal'),
@@ -222,22 +222,6 @@ menuModal.addEventListener('click', (e) => {
   if (e.target === menuModal) closeModal('menu');
 });
 
-/* testaa modalia — POISTA kun API kytketään */
-document.querySelectorAll('.card_show_menu').forEach(btn => {
-  btn.addEventListener('click', () => {
-      if (btn.classList.contains('card_show_menu_empty')) {
-         return; // stop here
-      }
-
-    const testData = [
-      { name: "Pariloitu broilerinfilee", price: "Opiskelija 2.90 € / henkilökunta 8.23 €", diets: ["G", "L", "M"] },
-      { name: "Falafelia", price: "Opiskelija 2.90 € / henkilökunta 8.23 €", diets: ["G", "ILM", "L", "Veg", "VS"] },
-      { name: "Perunamuusia", price: "Opiskelija 2.90 € / henkilökunta 8.23 €", diets: ["*", "A", "G", "L"] },
-    ];
-    openMenuModal('Ravintola 1', true, false, testData, testWeeklyData);
-  });
-});
-
 /* rendre weekly menu */
 const renderWeeklyMenu = (days) => {
   if (!days || days.length === 0) {
@@ -261,46 +245,24 @@ const renderWeeklyMenu = (days) => {
   `).join('');
 };
 
+/* render all restaurant cards into the list */
+const renderCards = (restaurants, closestIdx = -1) => {
+  const container = document.getElementById('restaurant_cards');
+  if (!container) return;
+  container.innerHTML = '';
 
+  if (!restaurants || restaurants.length === 0) {
+    container.innerHTML = '<p class="no-restaurants">Ei ravintoloita saatavilla</p>';
+    return;
+  }
 
+  restaurants.forEach((rest, idx) => {
+    const isClosest = idx === closestIdx;
+    const card = createCard(rest, isClosest);
+    container.appendChild(card);
+  });
+};
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// expose function globally and keep old misspelled name for compatibility
+window.renderCards = renderCards;
+window.rendreCards = renderCards;
