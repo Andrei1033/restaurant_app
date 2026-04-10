@@ -1,31 +1,8 @@
 let map;
 let userLocation = null;
+let locationPromise = null;
 
 const defaultLocation = [60.1699, 24.9384]; // Helsinki
-
-/* testiravintolat — poistetaan kun API kytketään */
-const testRestaurants = [
-  {
-    name: "Ravintola Töölö",
-    address: "Töölönkatu 12, Helsinki",
-    location: { coordinates: [24.9234, 60.1756] }
-  },
-  {
-    name: "Ravintola Otaniemi",
-    address: "Otakaari 4, Espoo",
-    location: { coordinates: [24.8301, 60.1841] }
-  },
-  {
-    name: "Ravintola Pasila",
-    address: "Pasilanraitio 5, Helsinki",
-    location: { coordinates: [24.9322, 60.1987] }
-  },
-  {
-    name: "Ravintola Kallio",
-    address: "Fleminginkatu 8, Helsinki",
-    location: { coordinates: [24.9501, 60.1834] }
-  }
-];
 
 /* laske etäisyys kahden koordinaatin välillä */
 const getDistance = (lat1, lon1, lat2, lon2) => {
@@ -40,6 +17,8 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
 
 /* löydä lähin ravintola */
 const findClosest = (restaurants, userLat, userLon) => {
+  if (!Array.isArray(restaurants) || restaurants.length === 0) return -1;
+
   let closestIndex = 0;
   let closestDistance = Infinity;
 
@@ -126,7 +105,7 @@ const addRestaurantsToMap = (restaurants, closestIndex) => {
         ">${restaurant.address}</p>
 
         <div style="display: flex; gap: 6px;">
-          <button onclick="openMenuModal('${restaurant.name}', ${isClosest}, false, testDailyData, testWeeklyData)" style="
+          <button class="open-menu-btn" data-id="${restaurant._id}" style="
             flex: 1;
             padding: 7px;
             background: rgba(4, 53, 88);
@@ -165,7 +144,70 @@ const addRestaurantsToMap = (restaurants, closestIndex) => {
       maxWidth: 260,
       closeButton: false
     });
+
+    /* attach async menu loader when popup opens */
+    marker.on('popupopen', async (e) => {
+      try {
+        const popupEl = e.popup.getElement();
+        if (!popupEl) return;
+        const btn = popupEl.querySelector('.open-menu-btn');
+        if (!btn) return;
+
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id;
+          const daily = await getDailyMenu(id, window.currentLang || 'fi');
+          const weekly = await getWeeklyMenu(id, window.currentLang || 'fi');
+          openMenuModal(restaurant.name, isClosest, false, daily, weekly);
+        }, { once: true });
+      }
+      catch (err) {
+        console.error('Error attaching popup handlers', err);
+      }
+    });
   });
+};
+
+/* Create a promise that resolves when the location is obtained */
+const getUserLocation = () => {
+   return new Promise((resolve) => {
+      if (userLocation) {
+         resolve(userLocation);
+         return;
+      }
+      if (navigator.geolocation) {
+         navigator.geolocation.getCurrentPosition(
+            (position) => {
+               userLocation = [position.coords.latitude, position.coords.longitude];
+               resolve(userLocation);
+
+               // Move the map to the user's location
+               map.setView(userLocation, 13)
+
+               // Add user location marker
+               L.circleMarker(userLocation, {
+                  radius: 8,
+                  fillColor: '#3b8beb',
+                  color: '#fff',
+                  weight: 2,
+                  fillOpacity: 1
+               }).addTo(map).bindPopup('Olet tässä').openPopup()
+
+               resolve(userLocation);
+            },
+            (error) => {
+               // If the user denies or an error occurs, use the default location
+               console.warn('Geolocation error:', error);
+               userLocation = defaultLocation;
+               resolve(userLocation);
+            }
+         );
+      }
+      else {
+         // If the browser does not support geolocation
+         userLocation = defaultLocation;
+         resolve(userLocation);
+      }
+   })
 };
 
 /* alusta kartta */
@@ -198,17 +240,15 @@ const initMap = () => {
           fillOpacity: 1
         }).addTo(map).bindPopup('Olet tässä');
 
-        /* löydä lähin ja lisää ravintolat */
-        const closestIndex = findClosest(testRestaurants, latitude, longitude);
-        addRestaurantsToMap(testRestaurants, closestIndex);
+        /* Note: restaurant rendering is handled in main.js after fetching API data */
       },
       /* jos käyttäjä kieltää sijainnin */
       () => {
-        addRestaurantsToMap(testRestaurants, 0);
+        /* user declined geolocation; main flow will render without userLocation */
       }
     );
   } else {
-    addRestaurantsToMap(testRestaurants, 0);
+    /* geolocation not supported; main flow will render restaurants */
   }
 };
 

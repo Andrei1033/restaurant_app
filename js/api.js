@@ -18,7 +18,7 @@ const getDailyMenu = async (id, lang = "fi") => {
    try {
       const response = await fetch(`${API_BASE_URL}/restaurants/daily/${id}/${lang}`);
       const data = await response.json();
-      return data;
+      return data.courses || [];
    }
    catch (error) {
       console.error(`Error fetching daily menu for restaurant ${id}:`, error);
@@ -31,7 +31,7 @@ const getWeeklyMenu = async (id, lang = "fi") => {
    try {
       const response = await fetch(`${API_BASE_URL}/restaurants/weekly/${id}/${lang}`);
       const data = await response.json();
-      return data;
+      return Array.isArray(data) ? data : data.days || [];
    }
    catch (error) {
       console.error(`Error fetching weekly menu for restaurant ${id}:`, error);

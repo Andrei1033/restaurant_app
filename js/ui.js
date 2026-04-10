@@ -70,7 +70,7 @@ const createCard = (restaurant, isClosest) => {
          <p>${restaurant.city} | ${restaurant.company}</p>
          </div>
          <div class="card_indicators">
-         ${isClosest ? '<span class="closest_indicator">Lähin</span>' : ''}
+         ${isClosest ? '<span class="closest_indicator" id="closest_indicator">Lähin</span>' : ''}
          <button class="card_favourite" aria-label="Lisää suosikkeihin">
             <svg class="heart-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -96,12 +96,12 @@ const createCard = (restaurant, isClosest) => {
       openMenuModal(restaurant.name, isClosest, false, dailyCourses, weeklyDays);
    });
 
-   /* show on map */
-   card.querySelector('.card_show_map').addEventListener('click', () => {
-      const [lat, lng] = restaurant.location.coordinates;
-      map.setView([lat, lng], 16);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-   });
+  /* show on map */
+  card.querySelector('.card_show_map').addEventListener('click', () => {
+    const [lon, lat] = restaurant.location.coordinates;
+    map.setView([lat, lon], 16);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
 
    return card;
 };
@@ -181,18 +181,31 @@ const openMenuModal = (restaurantName, isClosest, isFavourite, dailyCourses, wee
   menuModal.classList.add('active');
 };
 
-/* renderöi päivän menu */
+/* renderöi päivän menu -> */
+
+/* Helper function for normalizing diets data */
+const normalizeDiets = (diets) => {
+  if (!diets) return [];
+  if (Array.isArray(diets)) return diets;
+  if (typeof diets === 'string') {
+    // Erotellaan pilkut, välilyönnit ja mahdolliset muut erottimet
+    return diets.split(/[,; ]+/).filter(d => d.trim().length > 0);
+  }
+  return [];
+};
 
 let currentDailyData = [];
 let currentWeeklyData = [];
 
 const renderDailyMenu = (courses) => {
-  if (!courses || courses.length === 0) {
+  if (!courses || !Array.isArray(courses) || courses.length === 0) {
     menuModalBody.innerHTML = '<p class="menu-empty">Ei menua tänään</p>';
     return;
   }
 
-  menuModalBody.innerHTML = courses.map(course => `
+  menuModalBody.innerHTML = courses.map(course => {
+    course.diets = normalizeDiets(course.diets);
+    return `
     <div class="menu-item">
       <p class="menu-item-name">${course.name}</p>
       <p class="menu-item-price">${course.price}</p>
@@ -200,7 +213,8 @@ const renderDailyMenu = (courses) => {
         ${course.diets.map(diet => `<span class="diet-badge">${diet}</span>`).join('')}
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 };
 
 /* tab vaihto */
@@ -229,7 +243,13 @@ const renderWeeklyMenu = (days) => {
     return;
   }
 
-  menuModalBody.innerHTML = days.map(day => `
+  menuModalBody.innerHTML = days.map(day => {
+   // normalize diets for each course in the day
+   day.courses = day.courses.map(course => {
+     course.diets = normalizeDiets(course.diets);
+     return course;
+   });
+   return `
     <div class="menu-day">
       <p class="menu-day-title">${day.date}</p>
       ${day.courses.map(course => `
@@ -242,7 +262,8 @@ const renderWeeklyMenu = (days) => {
         </div>
       `).join('')}
     </div>
-  `).join('');
+  `;
+  }).join('');
 };
 
 /* render all restaurant cards into the list */
