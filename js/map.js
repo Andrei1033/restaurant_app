@@ -155,7 +155,8 @@ const addRestaurantsToMap = (restaurants, closestIndex) => {
 
          /* tarkista onko menu saatavilla */
          const daily = await getDailyMenu(restaurant._id, window.currentLang || 'fi');
-         const hasMenu = daily && daily.length > 0;
+         const weekly = await getWeeklyMenu(restaurant._id, window.currentLang || 'fi');
+         const hasMenu = (daily && daily.length > 0) || (weekly && weekly.length > 0);
 
          if (!hasMenu) {
             /* korvaa nappi varoituksella */

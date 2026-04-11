@@ -143,7 +143,10 @@ const createCard = async (restaurant, isClosest) => {
 
    /* tarkista onko menue saatavilla */
    const dailyCourses = await getDailyMenu(restaurant._id, currentLang);
-   const hasMenu = dailyCourses && dailyCourses.length > 0;
+   const weeklyDays = await getWeeklyMenu(restaurant._id, currentLang);
+   const hasDaily = dailyCourses && dailyCourses.length > 0;
+   const hasWeekly  = weeklyDays && weeklyDays.length > 0;
+   const hasMenu = hasDaily || hasWeekly;
 
    card.innerHTML = `
       <div class="upper_card">
