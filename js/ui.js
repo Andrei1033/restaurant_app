@@ -270,18 +270,103 @@ const renderWeeklyMenu = (days) => {
 const renderCards = (restaurants, closestIdx = -1) => {
   const container = document.getElementById('restaurant_cards');
   if (!container) return;
-  container.innerHTML = '';
 
   if (!restaurants || restaurants.length === 0) {
     container.innerHTML = '<p class="no-restaurants">Ei ravintoloita saatavilla</p>';
     return;
   }
 
-  restaurants.forEach((rest, idx) => {
-    const isClosest = idx === closestIdx;
+  /* laske sivut */
+  const totalPages = Math.ceil(restaurants.length / cardsPerPage);
+  const start = (currentPage - 1) * cardsPerPage;
+  const end = start + cardsPerPage;
+  const pageRestaurants = restaurants.slice(start, end);
+
+  /* tyhjää container */
+  container.innerHTML = '';
+
+  /* lisää kortit */
+  pageRestaurants.forEach((rest, idx) => {
+    const isClosest = (start + idx) === closestIdx;
     const card = createCard(rest, isClosest);
     container.appendChild(card);
   });
+
+  /* lisää pagination */
+  renderPagination(totalPages);
+};
+
+const renderPagination = (totalPages) => {
+  /* poista vanha pagination jos on */
+  const old = document.getElementById('pagination');
+  if (old) old.remove();
+
+  if (totalPages <= 1) return;
+
+  const pagination = document.createElement('div');
+  pagination.id = 'pagination';
+
+  /* edellinen nappi */
+  const prevBtn = document.createElement('button');
+  prevBtn.textContent = '←';
+  prevBtn.classList.add('page-btn');
+  prevBtn.disabled = currentPage === 1;
+  prevBtn.addEventListener('click', () => {
+    currentPage--;
+    renderCards(allRestaurants, closestIndex);
+    window.scrollTo({ top: document.getElementById('restaurant_cards').offsetTop - 20, behavior: 'smooth' });
+  });
+
+  /* sivunumero napit */
+  const pages = document.createElement('div');
+  pages.classList.add('page-numbers');
+
+  for (let i = 1; i <= totalPages; i++) {
+    /* näytä vain lähellä olevat sivut */
+    if (
+      i === 1 ||
+      i === totalPages ||
+      (i >= currentPage - 1 && i <= currentPage + 1)
+    ) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.classList.add('page-btn');
+      if (i === currentPage) btn.classList.add('active');
+      btn.addEventListener('click', () => {
+        currentPage = i;
+        renderCards(allRestaurants, closestIndex);
+        window.scrollTo({ top: document.getElementById('restaurant_cards').offsetTop - 20, behavior: 'smooth' });
+      });
+      pages.appendChild(btn);
+    } else if (
+      i === currentPage - 2 ||
+      i === currentPage + 2
+    ) {
+      /* lisää ... välit */
+      const dots = document.createElement('span');
+      dots.textContent = '...';
+      dots.classList.add('page-dots');
+      pages.appendChild(dots);
+    }
+  }
+
+  /* seuraava nappi */
+  const nextBtn = document.createElement('button');
+  nextBtn.textContent = '→';
+  nextBtn.classList.add('page-btn');
+  nextBtn.disabled = currentPage === totalPages;
+  nextBtn.addEventListener('click', () => {
+    currentPage++;
+    renderCards(allRestaurants, closestIndex);
+    window.scrollTo({ top: document.getElementById('restaurant_cards').offsetTop - 20, behavior: 'smooth' });
+  });
+
+  pagination.appendChild(prevBtn);
+  pagination.appendChild(pages);
+  pagination.appendChild(nextBtn);
+
+  /* lisää pagination korttien jälkeen */
+  document.getElementById('restaurant_cards').after(pagination);
 };
 
 // expose function globally and keep old misspelled name for compatibility

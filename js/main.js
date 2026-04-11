@@ -1,6 +1,8 @@
 let currentLang = 'fi';
 let allRestaurants = [];
 let closestIndex = 0;
+let currentPage = 1;
+const cardsPerPage = 8;
 
 const init = async () => {
 
