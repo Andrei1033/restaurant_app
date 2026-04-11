@@ -322,6 +322,34 @@ document.getElementById('menu_close').addEventListener('click', () => closeModal
 menuModal.addEventListener('click', (e) => {
   if (e.target === menuModal) closeModal('menu');
 });
+/* näytä kartalla menu-modalista */
+document.getElementById('menu_show_map').addEventListener('click', () => {
+   // Sulje menu-modal
+   closeModal('menu');
+
+   // Hae ravintolan nimi modalin otsikosta
+   const restaurantName = document.getElementById('menu_modal_name').textContent;
+
+   // Etsi ravintola listasta nimen perusteella
+   const restaurant = allRestaurants.find(r => r.name === restaurantName);
+
+   if (restaurant && restaurant.location && restaurant.location.coordinates) {
+      const [lon, lat] = restaurant.location.coordinates;
+      map.setView([lat, lon], 16);
+      const mapElement = document.getElementById('map');
+      if (mapElement) {
+      mapElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+   }
+   else {
+      console.error('Ravintolaa ei löytynyt kartalle:', restaurantName);
+      // Vaihtoehtoinen toiminto: avaa google maps
+      if (restaurant && restaurant.address) {
+      const query = encodeURIComponent(`${restaurant.name} ${restaurant.address}`);
+      window.open(`https://www.google.com/maps/search/${query}`, '_blank');
+      }
+   }
+});
 
 /* rendre weekly menu */
 const renderWeeklyMenu = (days) => {
