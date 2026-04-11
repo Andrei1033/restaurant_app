@@ -8,7 +8,13 @@ const init = async () => {
    initMap();
 
    /* hae ravintolat */
-   allRestaurants = await getRestaurants();
+   const [restaurants, location] = await Promise.all([
+      getRestaurants(),
+      getUserLocation()
+   ]);
+
+   allRestaurants = restaurants;
+   userLocation = location;
 
    /* laske etäisyydet ja lajittele lähimmästä alkaen, jos sijainti saatavilla */
    if (userLocation && Array.isArray(allRestaurants) && allRestaurants.length > 0) {
@@ -19,6 +25,19 @@ const init = async () => {
       });
       allRestaurants.sort((a, b) => (a._distance || Infinity) - (b._distance || Infinity));
       closestIndex = 0;
+
+      /* siirrä kartta käyttäjän sijaintiin */
+      map.setView(userLocation, 10);
+
+      /* lisää käyttäjän sijainti merkki */
+      L.circleMarker(userLocation, {
+         radius: 8,
+         fillColor: '#3b8beb',
+         color: '#fff',
+         weight: 2,
+         fillOpacity: 1
+      }).addTo(map);
+
    } else {
       closestIndex = -1;
    }
