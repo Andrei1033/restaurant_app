@@ -44,9 +44,39 @@ const init = async () => {
       closestIndex = -1;
    }
 
+   /* täytä dropdownit oikealla datalla */
+   populateFilters(allRestaurants);
+
    /* generoi kortit ja karttamerkit */
    renderCards(allRestaurants, closestIndex);
    addRestaurantsToMap(allRestaurants, closestIndex);
+};
+
+/* populate Filters */
+const populateFilters = (restaurants) => {
+   /* kaupungit */
+   const cities = [...new Set(restaurants.map(r => r.city).filter(Boolean))].sort();
+   const cityItems = document.querySelector('#city_select .select-items');
+   cityItems.innerHTML = '<div data-value="">Kaikki kaupungit</div>';
+   cities.forEach(city => {
+      const div = document.createElement('div');
+      div.dataset.value = city;
+      div.textContent = city;
+      cityItems.appendChild(div);
+   });
+
+   /* yhtiöt */
+   const companies = [...new Set(restaurants.map(r => r.company).filter(Boolean))].sort();
+   const companyItems = document.querySelector('#company_select .select-items');
+   companyItems.innerHTML = '<div data-value="">Kaikki yhtiöt</div>';
+   companies.forEach(company => {
+      const div = document.createElement('div');
+      div.dataset.value = company;
+      div.textContent = company;
+      companyItems.appendChild(div);
+   });
+
+   initDropdownListeners();
 };
 
 /* käynnistä kun sivu latautuu */

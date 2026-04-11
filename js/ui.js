@@ -1,3 +1,11 @@
+let activeFilters = {
+   city: "",
+   company: "",
+   search: "",
+   favourite: false
+};
+let currentFilteredRestaurants = null;
+
 /* language select ui*/
 const langBtns = document.querySelectorAll('.lang-btn');
 
@@ -11,39 +19,95 @@ langBtns.forEach(btn => {
   });
 });
 
+/* filters*/
+const applyFilters = () => {
+   let filtered = [...allRestaurants];
+
+   /* kaupunki filtteri */
+   if (activeFilters.city) {
+      filtered = filtered.filter(r =>
+         r.city?.toLowerCase() === activeFilters.city.toLowerCase());
+   }
+
+   /* yritys filtteri */
+   if (activeFilters.company) {
+      filtered = filtered.filter(r =>
+         r.company?.toLowerCase() === activeFilters.company.toLowerCase());
+   }
+
+   /* hakukenttä — nimi tai osoite */
+   if (activeFilters.search) {
+      const search = activeFilters.search.toLowerCase();
+      filtered = filtered.filter(r =>
+         r.name?.toLowerCase().includes(search) ||
+         r.address?.toLowerCase().includes(search) ||
+         r.city?.toLowerCase().includes(search)
+      );
+   }
+
+  /* suosikit — tullee myöhemmin kun kirjautuminen on valmis */
+  /* if (activeFilters.favourites) {
+    filtered = filtered.filter(r => r._id === userFavouriteId);
+  } */
+
+   /* render cards */
+   currentFilteredRestaurants = filtered;
+   currentPage = 1;
+   renderCards(filtered, closestIndex);
+};
+
+
 // filters dropdown
-const customSelects = document.querySelectorAll('.custom-select');
+const initDropdownListeners = () => {
+  document.querySelectorAll('.custom-select').forEach(select => {
+    const selected = select.querySelector('.select-selected');
+    const items = select.querySelector('.select-items');
 
-customSelects.forEach(select => {
-  const selected = select.querySelector('.select-selected');
-  const items = select.querySelector('.select-items');
+    const newSelected = selected.cloneNode(true);
+    selected.parentNode.replaceChild(newSelected, selected);
 
-  selected.addEventListener('click', () => {
-    const isOpen = !items.classList.contains('select-hide');
-
-    // sulje kaikki muut ensin
-    customSelects.forEach(s => {
-      s.querySelector('.select-items').classList.add('select-hide');
-      s.classList.remove('open');
+    newSelected.addEventListener('click', () => {
+      const isOpen = !items.classList.contains('select-hide');
+      document.querySelectorAll('.custom-select').forEach(s => {
+        s.querySelector('.select-items').classList.add('select-hide');
+        s.classList.remove('open');
+      });
+      if (!isOpen) {
+        items.classList.remove('select-hide');
+        select.classList.add('open');
+      }
     });
 
-    if (!isOpen) {
-      items.classList.remove('select-hide');
-      select.classList.add('open');
-    }
-  });
+    items.querySelectorAll('div').forEach(item => {
+      item.addEventListener('click', () => {
+        items.querySelectorAll('div').forEach(i => i.classList.remove('selected'));
+        item.classList.add('selected');
+        newSelected.textContent = item.textContent;
+        items.classList.add('select-hide');
+        select.classList.remove('open');
 
-  items.querySelectorAll('div').forEach(item => {
-    item.addEventListener('click', () => {
-      // poista selected kaikilta
-      items.querySelectorAll('div').forEach(i => i.classList.remove('selected'));
-      item.classList.add('selected');
-      selected.textContent = item.textContent;
-      items.classList.add('select-hide');
-      select.classList.remove('open');
+        if (select.id === 'city_select') {
+          activeFilters.city = item.dataset.value;
+        } else if (select.id === 'company_select') {
+          activeFilters.company = item.dataset.value;
+        }
+        applyFilters();
+      });
     });
   });
-});
+
+  document.addEventListener('click', (e) => {
+    document.querySelectorAll('.custom-select').forEach(select => {
+      if (!select.contains(e.target)) {
+        select.querySelector('.select-items').classList.add('select-hide');
+        select.classList.remove('open');
+      }
+    });
+  });
+};
+
+/* alusta heti sivun latautuessa */
+initDropdownListeners();
 
 // sulje jos klikataan muualle
 document.addEventListener('click', (e) => {
@@ -55,13 +119,31 @@ document.addEventListener('click', (e) => {
   });
 });
 
+/* hakukenttä */
+const searchInput = document.getElementById('search_input');
+   searchInput.addEventListener('input', (e) => {
+      activeFilters.search = e.target.value.trim();
+      applyFilters();
+});
+
+/* suosikit nappi */
+document.getElementById('favourites_button').addEventListener('click', () => {
+   activeFilters.favourites = !activeFilters.favourites;
+   document.getElementById('favourites_button').classList.toggle('active', activeFilters.favourites);
+   applyFilters();
+});
+
 /* generate one card by api data*/
-const createCard = (restaurant, isClosest) => {
-  const card = document.createElement('div');
-  card.classList.add('card');
+const createCard = async (restaurant, isClosest) => {
+   const card = document.createElement('div');
+   card.classList.add('card');
    card.dataset.id = restaurant._id;
    card.dataset.city = restaurant.city;
    card.dataset.company = restaurant.company;
+
+   /* tarkista onko menue saatavilla */
+   const dailyCourses = await getDailyMenu(restaurant._id, currentLang);
+   const hasMenu = dailyCourses && dailyCourses.length > 0;
 
    card.innerHTML = `
       <div class="upper_card">
@@ -79,7 +161,11 @@ const createCard = (restaurant, isClosest) => {
          </div>
       </div>
       <div class="lower_card">
-         <button class="card_show_menu">Näytä valikko</button>
+         ${!hasMenu ? '<p class="empty_menu">Valikko ei ole saatavissa tänään</p>' : ''}
+         <button class="card_show_menu ${!hasMenu ? 'card_show_menu_empty' : ''}"
+         ${!hasMenu ? 'style="display:none"' : ''}>
+         Näytä valikko
+         </button>
          <button class="card_show_map">Näytä kartta</button>
       </div>
    `;
@@ -90,11 +176,12 @@ const createCard = (restaurant, isClosest) => {
    });
 
    /* show menu */
-   card.querySelector('.card_show_menu').addEventListener('click', async () => {
-      const dailyCourses = await getDailyMenu(restaurant._id, currentLang);
-      const weeklyDays = await getWeeklyMenu(restaurant._id, currentLang);
-      openMenuModal(restaurant.name, isClosest, false, dailyCourses, weeklyDays);
-   });
+   if (hasMenu) {
+      card.querySelector('.card_show_menu').addEventListener('click', async () => {
+         const weeklyDays = await getWeeklyMenu(restaurant._id, currentLang);
+         openMenuModal(restaurant.name, isClosest, false, dailyCourses, weeklyDays);
+      });
+   }
 
   /* show on map */
   card.querySelector('.card_show_map').addEventListener('click', () => {
@@ -267,7 +354,7 @@ const renderWeeklyMenu = (days) => {
 };
 
 /* render all restaurant cards into the list */
-const renderCards = (restaurants, closestIdx = -1) => {
+const renderCards = async (restaurants, closestIdx = -1) => {
   const container = document.getElementById('restaurant_cards');
   if (!container) return;
 
@@ -276,97 +363,94 @@ const renderCards = (restaurants, closestIdx = -1) => {
     return;
   }
 
-  /* laske sivut */
   const totalPages = Math.ceil(restaurants.length / cardsPerPage);
   const start = (currentPage - 1) * cardsPerPage;
   const end = start + cardsPerPage;
   const pageRestaurants = restaurants.slice(start, end);
 
-  /* tyhjää container */
   container.innerHTML = '';
 
-  /* lisää kortit */
-  pageRestaurants.forEach((rest, idx) => {
-    const isClosest = (start + idx) === closestIdx;
-    const card = createCard(rest, isClosest);
-    container.appendChild(card);
-  });
+  /* odota että kaikki kortit on luotu */
+  const cards = await Promise.all(
+    pageRestaurants.map((rest, idx) => createCard(rest, (start + idx) === closestIdx))
+  );
 
-  /* lisää pagination */
+  cards.forEach(card => container.appendChild(card));
+
   renderPagination(totalPages);
 };
 
 const renderPagination = (totalPages) => {
-  /* poista vanha pagination jos on */
-  const old = document.getElementById('pagination');
-  if (old) old.remove();
+   /* poista vanha pagination jos on */
+   const old = document.getElementById('pagination');
+   if (old) old.remove();
 
-  if (totalPages <= 1) return;
+   if (totalPages <= 1) return;
 
-  const pagination = document.createElement('div');
-  pagination.id = 'pagination';
+   const pagination = document.createElement('div');
+   pagination.id = 'pagination';
 
-  /* edellinen nappi */
-  const prevBtn = document.createElement('button');
-  prevBtn.textContent = '←';
-  prevBtn.classList.add('page-btn');
-  prevBtn.disabled = currentPage === 1;
-  prevBtn.addEventListener('click', () => {
-    currentPage--;
-    renderCards(allRestaurants, closestIndex);
-    window.scrollTo({ top: document.getElementById('restaurant_cards').offsetTop - 20, behavior: 'smooth' });
-  });
+   /* edellinen nappi */
+   const prevBtn = document.createElement('button');
+   prevBtn.textContent = '←';
+   prevBtn.classList.add('page-btn');
+   prevBtn.disabled = currentPage === 1;
+   prevBtn.addEventListener('click', () => {
+      currentPage--;
+   renderCards(currentFilteredRestaurants || allRestaurants, closestIndex);
+   window.scrollTo({ top: document.getElementById('restaurant_cards').offsetTop - 20, behavior: 'smooth' });
+   });
 
-  /* sivunumero napit */
-  const pages = document.createElement('div');
-  pages.classList.add('page-numbers');
+   /* sivunumero napit */
+   const pages = document.createElement('div');
+   pages.classList.add('page-numbers');
 
-  for (let i = 1; i <= totalPages; i++) {
-    /* näytä vain lähellä olevat sivut */
-    if (
+   for (let i = 1; i <= totalPages; i++) {
+      /* näytä vain lähellä olevat sivut */
+      if (
       i === 1 ||
       i === totalPages ||
       (i >= currentPage - 1 && i <= currentPage + 1)
-    ) {
+      ) {
       const btn = document.createElement('button');
       btn.textContent = i;
       btn.classList.add('page-btn');
       if (i === currentPage) btn.classList.add('active');
       btn.addEventListener('click', () => {
-        currentPage = i;
-        renderCards(allRestaurants, closestIndex);
-        window.scrollTo({ top: document.getElementById('restaurant_cards').offsetTop - 20, behavior: 'smooth' });
+         currentPage = i;
+         renderCards(currentFilteredRestaurants || allRestaurants, closestIndex);
+         window.scrollTo({ top: document.getElementById('restaurant_cards').offsetTop - 20, behavior: 'smooth' });
       });
       pages.appendChild(btn);
-    } else if (
+      } else if (
       i === currentPage - 2 ||
       i === currentPage + 2
-    ) {
+      ) {
       /* lisää ... välit */
       const dots = document.createElement('span');
       dots.textContent = '...';
       dots.classList.add('page-dots');
       pages.appendChild(dots);
-    }
-  }
+      }
+   }
 
-  /* seuraava nappi */
-  const nextBtn = document.createElement('button');
-  nextBtn.textContent = '→';
-  nextBtn.classList.add('page-btn');
-  nextBtn.disabled = currentPage === totalPages;
-  nextBtn.addEventListener('click', () => {
-    currentPage++;
-    renderCards(allRestaurants, closestIndex);
-    window.scrollTo({ top: document.getElementById('restaurant_cards').offsetTop - 20, behavior: 'smooth' });
-  });
+   /* seuraava nappi */
+   const nextBtn = document.createElement('button');
+   nextBtn.textContent = '→';
+   nextBtn.classList.add('page-btn');
+   nextBtn.disabled = currentPage === totalPages;
+   nextBtn.addEventListener('click', () => {
+      currentPage++;
+      renderCards(currentFilteredRestaurants || allRestaurants, closestIndex);
+      window.scrollTo({ top: document.getElementById('restaurant_cards').offsetTop - 20, behavior: 'smooth' });
+   });
 
-  pagination.appendChild(prevBtn);
-  pagination.appendChild(pages);
-  pagination.appendChild(nextBtn);
+   pagination.appendChild(prevBtn);
+   pagination.appendChild(pages);
+   pagination.appendChild(nextBtn);
 
-  /* lisää pagination korttien jälkeen */
-  document.getElementById('restaurant_cards').after(pagination);
+   /* lisää pagination korttien jälkeen */
+   document.getElementById('restaurant_cards').after(pagination);
 };
 
 // expose function globally and keep old misspelled name for compatibility
