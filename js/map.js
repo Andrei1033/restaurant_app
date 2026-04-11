@@ -181,7 +181,7 @@ const getUserLocation = () => {
                resolve(userLocation);
 
                // Move the map to the user's location
-               map.setView(userLocation, 13)
+               map.setView(userLocation, 10)
 
                // Add user location marker
                L.circleMarker(userLocation, {
@@ -190,7 +190,7 @@ const getUserLocation = () => {
                   color: '#fff',
                   weight: 2,
                   fillOpacity: 1
-               }).addTo(map).bindPopup('Olet tässä').openPopup()
+               }).addTo(map)
 
                resolve(userLocation);
             },
@@ -220,35 +220,5 @@ const initMap = () => {
     maxBoundsViscosity: 1.0,
     bounds: [[-90, -180], [90, 180]]
   }).addTo(map);
-
-  /* pyydä käyttäjän sijainti */
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        userLocation = [latitude, longitude];
-
-        /* siirrä kartta käyttäjän sijaintiin */
-        map.setView(userLocation, 10);
-
-        /* lisää käyttäjän sijainti merkki */
-        L.circleMarker(userLocation, {
-          radius: 8,
-          fillColor: '#3b8beb',
-          color: '#fff',
-          weight: 2,
-          fillOpacity: 1
-        }).addTo(map).bindPopup('Olet tässä');
-
-        /* Note: restaurant rendering is handled in main.js after fetching API data */
-      },
-      /* jos käyttäjä kieltää sijainnin */
-      () => {
-        /* user declined geolocation; main flow will render without userLocation */
-      }
-    );
-  } else {
-    /* geolocation not supported; main flow will render restaurants */
-  }
 };
 
