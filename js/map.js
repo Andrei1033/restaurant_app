@@ -145,26 +145,47 @@ const addRestaurantsToMap = (restaurants, closestIndex) => {
       closeButton: false
     });
 
-    /* attach async menu loader when popup opens */
-    marker.on('popupopen', async (e) => {
+   /* attach async menu loader when popup opens */
+      marker.on('popupopen', async (e) => {
       try {
-        const popupEl = e.popup.getElement();
-        if (!popupEl) return;
-        const btn = popupEl.querySelector('.open-menu-btn');
-        if (!btn) return;
+         const popupEl = e.popup.getElement();
+         if (!popupEl) return;
+         const btn = popupEl.querySelector('.open-menu-btn');
+         if (!btn) return;
 
-        btn.addEventListener('click', async () => {
-          const id = btn.dataset.id;
-          const daily = await getDailyMenu(id, window.currentLang || 'fi');
-          const weekly = await getWeeklyMenu(id, window.currentLang || 'fi');
-          openMenuModal(restaurant.name, isClosest, false, daily, weekly);
-        }, { once: true });
+         /* tarkista onko menu saatavilla */
+         const daily = await getDailyMenu(restaurant._id, window.currentLang || 'fi');
+         const hasMenu = daily && daily.length > 0;
+
+         if (!hasMenu) {
+            /* korvaa nappi varoituksella */
+            btn.outerHTML = `
+            <p style="
+               font-size: 12px;
+               color: #9a6700;
+               background: #faeeda;
+               border-radius: 6px;
+               padding: 5px 10px;
+               margin: 0;
+               flex: 1;
+               text-align: center;
+            ">Menue ei löyty</p>
+            `;
+            return;
+         }
+
+         btn.addEventListener('click', async () => {
+            const id = btn.dataset.id;
+            const daily = await getDailyMenu(id, window.currentLang || 'fi');
+            const weekly = await getWeeklyMenu(id, window.currentLang || 'fi');
+            openMenuModal(restaurant.name, isClosest, false, daily, weekly);
+         }, { once: true });
       }
       catch (err) {
-        console.error('Error attaching popup handlers', err);
+         console.error('Error attaching popup handlers', err);
       }
-    });
-  });
+      });
+   });
 };
 
 /* Create a promise that resolves when the location is obtained */

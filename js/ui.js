@@ -161,7 +161,7 @@ const createCard = async (restaurant, isClosest) => {
          </div>
       </div>
       <div class="lower_card">
-         ${!hasMenu ? '<p class="empty_menu">Valikko ei ole saatavissa tänään</p>' : ''}
+         ${!hasMenu ? '<p class="empty_menu">Valikko ei ole saatavissa</p>' : ''}
          <button class="card_show_menu ${!hasMenu ? 'card_show_menu_empty' : ''}"
          ${!hasMenu ? 'style="display:none"' : ''}>
          Näytä valikko
