@@ -1,5 +1,3 @@
-const API_BASE_URL = 'https://media2.edu.metropolia.fi/restaurant/api/v1';
-
 //tallenna token
 const saveToken = (token) => {
    localStorage.setItem('token', token);
@@ -43,7 +41,7 @@ const checkToken = async () => {
 // kirjaudu sisään
 const login = async (email, password) => {
    try {
-      const response = await fetch(`${API_BASE_URL}/users/login`, {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
          method: 'POST',
          headers: {
             'Content-Type': 'application/json'
@@ -64,6 +62,34 @@ const login = async (email, password) => {
       return { success: false, message: 'Kirjautuminen epäonnistui' };
    }
 };
+
+// registration
+const register = async (username, email, password) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ username, email, password })
+    });
+
+    const data = await response.json();
+    console.log('API vastaus:', data);
+
+    if (!response.ok) {
+      return { success: false, message: data.message || 'Rekisteröinti epäonnistui' };
+    }
+
+    const loginResult = await login(username, password);
+    return loginResult;
+
+  } catch (error) {
+    console.error('Rekisteröintivirhe:', error);
+    return { success: false, message: 'Verkkovirhe, yritä uudelleen' };
+  }
+};
+
 
 // kirjaudu ulos
 const logout = () => {

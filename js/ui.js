@@ -19,6 +19,67 @@ langBtns.forEach(btn => {
   });
 });
 
+/* päivitä header kirjautumisen mukaan */
+const updateHeaderUI = (user) => {
+   const loginButtons = document.getElementById('login_buttons');
+   const userProfile = document.getElementById('user_profile');
+   const headerAvatar = document.getElementById('header_avatar');
+   const headerUsername = document.getElementById('header_username');
+
+   if (user) {
+      /* kirjautunut — piilota napit, näytä profiili */
+      loginButtons.style.display = 'none';
+      userProfile.style.display = 'block';
+      headerUsername.textContent = user.username;
+
+      if (user.avatar) {
+         headerAvatar.src = `https://media2.edu.metropolia.fi/restaurant/uploads/${user.avatar}`;
+      }
+      else {
+         headerAvatar.src = '../assets/tremplate_profile.jpg';
+      }
+   }
+   else {
+      /* ei kirjautunut — näytä napit, piilota profiili */
+      loginButtons.style.display = 'block';
+      userProfile.style.display = 'none';
+   }
+};
+
+/* kirjautuminen */
+document.getElementById('login_button').addEventListener('click', async () => {
+   const username = document.getElementById('login_username').value;
+   const password = document.getElementById('login_password').value;
+   const errorEl = document.getElementById('login_error');
+
+   if (!username || !password) {
+      errorEl.textContent = 'Täytä kaikki kentät';
+      return;
+   }
+
+   /* muuta nappi ladaustilaan */
+   const submitButton = document.getElementById('login_button');
+   submitButton.textContent = "Ladataan...";
+   submitButton.disabled = true;
+
+   const result = await login(username, password);
+
+   submitButton.textContent = "Kirjaudu";
+   submitButton.disabled = false;
+
+   if (result.success) {
+      updateHeaderUI(result.user);
+      closeModal('login');
+      errorEl.textContent = '';
+      /* tyhjää kentät */
+      document.getElementById('login_username').value = '';
+      document.getElementById('login_password').value = '';
+   }
+   else {
+      errorEl.textContent = result.message;
+   }
+});
+
 /* filters*/
 const applyFilters = () => {
    let filtered = [...allRestaurants];
@@ -108,16 +169,6 @@ const initDropdownListeners = () => {
 
 /* alusta heti sivun latautuessa */
 initDropdownListeners();
-
-// sulje jos klikataan muualle
-document.addEventListener('click', (e) => {
-  customSelects.forEach(select => {
-    if (!select.contains(e.target)) {
-      select.querySelector('.select-items').classList.add('select-hide');
-      select.classList.remove('open');
-    }
-  });
-});
 
 /* hakukenttä */
 const searchInput = document.getElementById('search_input');

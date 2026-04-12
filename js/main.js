@@ -5,9 +5,14 @@ let currentPage = 1;
 const cardsPerPage = 8;
 
 const init = async () => {
-
    /* alusta kartta */
    initMap();
+
+   /* tarkista onko käyttäjä jo kirjautunut */
+   const user = await checkToken();
+   if (user) {
+      updateHeaderUI(user);
+   }
 
    /* hae ravintolat */
    const [restaurants, location] = await Promise.all([

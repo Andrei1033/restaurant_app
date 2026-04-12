@@ -124,6 +124,22 @@
   opacity: 0.85;
 }
 
+#logout_button {
+  background: transparent;
+  border: 1px solid rgba(4, 53, 88, 0.3);
+  border-radius: 5px;
+  padding: 5px 10px;
+  font-size: 12px;
+  color: rgba(4, 53, 88);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#logout_button:hover {
+  background: rgba(4, 53, 88);
+  color: #fff;
+}
+
 /* virheviesti */
 .modal-error {
   color: #c0392b;
