@@ -47,7 +47,7 @@ const updateHeaderUI = (user) => {
 };
 
 /* kirjautuminen */
-document.getElementById('login_button').addEventListener('click', async () => {
+document.getElementById('login_submit').addEventListener('click', async () => {
    const username = document.getElementById('login_username').value;
    const password = document.getElementById('login_password').value;
    const errorEl = document.getElementById('login_error');
@@ -58,7 +58,7 @@ document.getElementById('login_button').addEventListener('click', async () => {
    }
 
    /* muuta nappi ladaustilaan */
-   const submitButton = document.getElementById('login_button');
+   const submitButton = document.getElementById('login_submit');
    submitButton.textContent = "Ladataan...";
    submitButton.disabled = true;
 
