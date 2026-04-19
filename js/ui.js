@@ -1,22 +1,22 @@
 let activeFilters = {
-   city: "",
-   company: "",
-   search: "",
-   favourite: false
+   city: '',
+   company: '',
+   search: '',
+   favourite: false,
 };
 let currentFilteredRestaurants = null;
 
 /* language select ui*/
 const langBtns = document.querySelectorAll('.lang-btn');
 
-langBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    langBtns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const lang = btn.dataset.lang;
-    console.log('Kieli vaihdettu:', lang);
-    // myöhemmin tähän API-kutsu oikealla kielellä
-  });
+langBtns.forEach((btn) => {
+   btn.addEventListener('click', () => {
+      langBtns.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      const lang = btn.dataset.lang;
+      console.log('Kieli vaihdettu:', lang);
+      // myöhemmin tähän API-kutsu oikealla kielellä
+   });
 });
 
 /* päivitä header kirjautumisen mukaan */
@@ -34,12 +34,10 @@ const updateHeaderUI = (user) => {
 
       if (user.avatar) {
          headerAvatar.src = `https://media2.edu.metropolia.fi/restaurant/uploads/${user.avatar}`;
-      }
-      else {
+      } else {
          headerAvatar.src = '../assets/tremplate_profile.jpg';
       }
-   }
-   else {
+   } else {
       /* ei kirjautunut — näytä napit, piilota profiili */
       loginButtons.style.display = 'block';
       userProfile.style.display = 'none';
@@ -59,12 +57,12 @@ document.getElementById('login_submit').addEventListener('click', async () => {
 
    /* muuta nappi ladaustilaan */
    const submitButton = document.getElementById('login_submit');
-   submitButton.textContent = "Ladataan...";
+   submitButton.textContent = 'Ladataan...';
    submitButton.disabled = true;
 
    const result = await login(username, password);
 
-   submitButton.textContent = "Kirjaudu";
+   submitButton.textContent = 'Kirjaudu';
    submitButton.disabled = false;
 
    if (result.success) {
@@ -74,11 +72,234 @@ document.getElementById('login_submit').addEventListener('click', async () => {
       /* tyhjää kentät */
       document.getElementById('login_username').value = '';
       document.getElementById('login_password').value = '';
-   }
-   else {
+   } else {
       errorEl.textContent = result.message;
    }
 });
+
+// Täytä profiilimodaalin kentät
+const populateProfileModal = async () => {
+   const user = await getUserProfile();
+   if (!user) return;
+
+   // Aseta placeholderit tuoreilla tiedoilla
+   document.getElementById('profile_username').placeholder = user.username || 'Käyttäjänimi';
+   document.getElementById('profile_email').placeholder = user.email || 'Sähköposti';
+   document.getElementById('profile_password').placeholder = 'Jätä tyhjäksi jos ei muutosta';
+
+   // Tyhjennä input-kentät (ettei vanhat arvot jää näkymään)
+   document.getElementById('profile_username').value = '';
+   document.getElementById('profile_email').value = '';
+   document.getElementById('profile_password').value = '';
+
+   // Päivitä profiilikuva modaaliin - HAETAAN PALVELIMELTA
+   if (user.avatar) {
+      // Lisää aikaleima estämään välimuistiongelmat
+      const avatarUrl = `https://media2.edu.metropolia.fi/restaurant/uploads/${user.avatar}?t=${Date.now()}`;
+      document.getElementById('profile_avatar_preview').src = avatarUrl;
+   } else {
+      document.getElementById('profile_avatar_preview').src = '../assets/tremplate_profile.jpg';
+   }
+};
+
+// Käsittele profiilin päivitys
+const handleAvatarUpload = async (file) => {
+   if (!file) return;
+
+   const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+   if (!allowedTypes.includes(file.type)) {
+      const errorEl = document.getElementById('profile_error');
+      errorEl.style.color = '#f44336';
+      errorEl.textContent = 'Vain kuvatiedostot (JPEG, PNG, GIF) ovat sallittuja';
+      setTimeout(() => {
+         errorEl.textContent = '';
+         errorEl.style.color = '';
+      }, 3000);
+      return;
+   }
+
+   if (file.size > 5 * 1024 * 1024) {
+      const errorEl = document.getElementById('profile_error');
+      errorEl.style.color = '#f44336';
+      errorEl.textContent = 'Kuvan maksimikoko on 5MB';
+      setTimeout(() => {
+         errorEl.textContent = '';
+         errorEl.style.color = '';
+      }, 3000);
+      return;
+   }
+
+   // Näytä esikatselu heti
+   const reader = new FileReader();
+   reader.onload = (e) => {
+      document.getElementById('profile_avatar_preview').src = e.target.result;
+   };
+   reader.readAsDataURL(file);
+
+   const result = await uploadAvatar(file);
+
+   if (result.success) {
+      // Hae tuoreet käyttäjätiedot palvelimelta
+      const updatedUser = await getUserProfile();
+      if (updatedUser) {
+         // Päivitä header
+         updateHeaderUI(updatedUser);
+
+         // Päivitä modaalin placeholderit (jos nimi/email on muuttunut)
+         if (updatedUser.username) {
+            document.getElementById('profile_username').placeholder = updatedUser.username;
+         }
+         if (updatedUser.email) {
+            document.getElementById('profile_email').placeholder = updatedUser.email;
+         }
+
+         // Päivitä profiilikuva uudelleen varmuuden vuoksi
+         if (updatedUser.avatar) {
+            const avatarUrl = `https://media2.edu.metropolia.fi/restaurant/uploads/${updatedUser.avatar}?t=${Date.now()}`;
+            document.getElementById('profile_avatar_preview').src = avatarUrl;
+         }
+      }
+
+      const errorEl = document.getElementById('profile_error');
+      errorEl.style.color = '#4caf50';
+      errorEl.textContent = 'Profiilikuva päivitetty!';
+      setTimeout(() => {
+         errorEl.textContent = '';
+         errorEl.style.color = '';
+      }, 3000);
+   } else {
+      const errorEl = document.getElementById('profile_error');
+      errorEl.style.color = '#f44336';
+      errorEl.textContent = result.message;
+      setTimeout(() => {
+         errorEl.textContent = '';
+         errorEl.style.color = '';
+      }, 3000);
+   }
+};
+
+// Käsittele profiilikuvan lataus
+const handleProfileUpdate = async () => {
+   const usernameInput = document.getElementById('profile_username');
+   const emailInput = document.getElementById('profile_email');
+   const passwordInput = document.getElementById('profile_password');
+   const errorEl = document.getElementById('profile_error');
+
+   const updatedData = {};
+
+   if (usernameInput.value.trim()) updatedData.username = usernameInput.value.trim();
+   if (emailInput.value.trim()) updatedData.email = emailInput.value.trim();
+   if (passwordInput.value.trim()) updatedData.password = passwordInput.value.trim();
+
+   if (Object.keys(updatedData).length === 0) {
+      errorEl.textContent = 'Ei muutoksia päivitettäväksi';
+      setTimeout(() => {
+         errorEl.textContent = '';
+      }, 3000);
+      return;
+   }
+
+   const submitButton = document.getElementById('profile_submit');
+   const originalButtonText = submitButton.textContent;
+   submitButton.textContent = 'Tallennetaan...';
+   submitButton.disabled = true;
+
+   const result = await updateUserProfile(updatedData);
+
+   submitButton.textContent = originalButtonText;
+   submitButton.disabled = false;
+
+   if (result.success) {
+      // Hae tuoreet käyttäjätiedot palvelimelta
+      const updatedUser = await getUserProfile();
+      if (updatedUser) {
+         updateHeaderUI(updatedUser);
+
+         // Päivitä placeholderit uusilla tiedoilla
+         document.getElementById('profile_username').placeholder = updatedUser.username || 'Käyttäjänimi';
+         document.getElementById('profile_email').placeholder = updatedUser.email || 'Sähköposti';
+
+         // Päivitä profiilikuva (jos avatar on muuttunut)
+         if (updatedUser.avatar) {
+            const avatarUrl = `https://media2.edu.metropolia.fi/restaurant/uploads/${updatedUser.avatar}?t=${Date.now()}`;
+            document.getElementById('profile_avatar_preview').src = avatarUrl;
+         }
+      }
+
+      // Tyhjennä input-kentät
+      usernameInput.value = '';
+      emailInput.value = '';
+      passwordInput.value = '';
+
+      errorEl.style.color = '#4caf50';
+      errorEl.textContent = 'Profiili päivitetty onnistuneesti!';
+      setTimeout(() => {
+         errorEl.textContent = '';
+         errorEl.style.color = '';
+      }, 3000);
+   } else {
+      errorEl.style.color = '#f44336';
+      errorEl.textContent = result.message;
+      setTimeout(() => {
+         errorEl.textContent = '';
+         errorEl.style.color = '';
+      }, 3000);
+   }
+};
+
+// Alusta profiilimodaalin event listenerit
+const initProfileModal = () => {
+   const avatarInput = document.getElementById('profile_avatar_input');
+   if (avatarInput) {
+      // Poista vanhat listenerit
+      const newAvatarInput = avatarInput.cloneNode(true);
+      avatarInput.parentNode.replaceChild(newAvatarInput, avatarInput);
+
+      newAvatarInput.addEventListener('change', (e) => {
+         if (e.target.files && e.target.files[0]) {
+            handleAvatarUpload(e.target.files[0]);
+         }
+         // Tyhjennä input, jotta sama tiedosto voidaan valita uudelleen
+         e.target.value = '';
+      });
+   }
+
+   const uploadBtn = document.querySelector('.avatar-upload-btn');
+   if (uploadBtn) {
+      const newUploadBtn = uploadBtn.cloneNode(true);
+      uploadBtn.parentNode.replaceChild(newUploadBtn, uploadBtn);
+
+      newUploadBtn.addEventListener('click', () => {
+         document.getElementById('profile_avatar_input').click();
+      });
+   }
+
+   const submitBtn = document.getElementById('profile_submit');
+   if (submitBtn) {
+      const newSubmitBtn = submitBtn.cloneNode(true);
+      submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
+
+      newSubmitBtn.addEventListener('click', handleProfileUpdate);
+   }
+
+   const logoutBtn = document.getElementById('logout_button');
+   if (logoutBtn) {
+      const newLogoutBtn = logoutBtn.cloneNode(true);
+      logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
+
+      newLogoutBtn.addEventListener('click', () => {
+         logout();
+         closeModal('profile');
+         // Tyhjennä kentät
+         document.getElementById('profile_username').value = '';
+         document.getElementById('profile_email').value = '';
+         document.getElementById('profile_password').value = '';
+         document.getElementById('profile_username').placeholder = 'Käyttäjänimi';
+         document.getElementById('profile_email').placeholder = 'Sähköposti';
+         document.getElementById('profile_avatar_preview').src = '../assets/tremplate_profile.jpg';
+      });
+   }
+};
 
 /* filters*/
 const applyFilters = () => {
@@ -86,28 +307,22 @@ const applyFilters = () => {
 
    /* kaupunki filtteri */
    if (activeFilters.city) {
-      filtered = filtered.filter(r =>
-         r.city?.toLowerCase() === activeFilters.city.toLowerCase());
+      filtered = filtered.filter((r) => r.city?.toLowerCase() === activeFilters.city.toLowerCase());
    }
 
    /* yritys filtteri */
    if (activeFilters.company) {
-      filtered = filtered.filter(r =>
-         r.company?.toLowerCase() === activeFilters.company.toLowerCase());
+      filtered = filtered.filter((r) => r.company?.toLowerCase() === activeFilters.company.toLowerCase());
    }
 
    /* hakukenttä — nimi tai osoite */
    if (activeFilters.search) {
       const search = activeFilters.search.toLowerCase();
-      filtered = filtered.filter(r =>
-         r.name?.toLowerCase().includes(search) ||
-         r.address?.toLowerCase().includes(search) ||
-         r.city?.toLowerCase().includes(search)
-      );
+      filtered = filtered.filter((r) => r.name?.toLowerCase().includes(search) || r.address?.toLowerCase().includes(search) || r.city?.toLowerCase().includes(search));
    }
 
-  /* suosikit — tullee myöhemmin kun kirjautuminen on valmis */
-  /* if (activeFilters.favourites) {
+   /* suosikit — tullee myöhemmin kun kirjautuminen on valmis */
+   /* if (activeFilters.favourites) {
     filtered = filtered.filter(r => r._id === userFavouriteId);
   } */
 
@@ -117,54 +332,53 @@ const applyFilters = () => {
    renderCards(filtered, closestIndex);
 };
 
-
 // filters dropdown
 const initDropdownListeners = () => {
-  document.querySelectorAll('.custom-select').forEach(select => {
-    const selected = select.querySelector('.select-selected');
-    const items = select.querySelector('.select-items');
+   document.querySelectorAll('.custom-select').forEach((select) => {
+      const selected = select.querySelector('.select-selected');
+      const items = select.querySelector('.select-items');
 
-    const newSelected = selected.cloneNode(true);
-    selected.parentNode.replaceChild(newSelected, selected);
+      const newSelected = selected.cloneNode(true);
+      selected.parentNode.replaceChild(newSelected, selected);
 
-    newSelected.addEventListener('click', () => {
-      const isOpen = !items.classList.contains('select-hide');
-      document.querySelectorAll('.custom-select').forEach(s => {
-        s.querySelector('.select-items').classList.add('select-hide');
-        s.classList.remove('open');
+      newSelected.addEventListener('click', () => {
+         const isOpen = !items.classList.contains('select-hide');
+         document.querySelectorAll('.custom-select').forEach((s) => {
+            s.querySelector('.select-items').classList.add('select-hide');
+            s.classList.remove('open');
+         });
+         if (!isOpen) {
+            items.classList.remove('select-hide');
+            select.classList.add('open');
+         }
       });
-      if (!isOpen) {
-        items.classList.remove('select-hide');
-        select.classList.add('open');
-      }
-    });
 
-    items.querySelectorAll('div').forEach(item => {
-      item.addEventListener('click', () => {
-        items.querySelectorAll('div').forEach(i => i.classList.remove('selected'));
-        item.classList.add('selected');
-        newSelected.textContent = item.textContent;
-        items.classList.add('select-hide');
-        select.classList.remove('open');
+      items.querySelectorAll('div').forEach((item) => {
+         item.addEventListener('click', () => {
+            items.querySelectorAll('div').forEach((i) => i.classList.remove('selected'));
+            item.classList.add('selected');
+            newSelected.textContent = item.textContent;
+            items.classList.add('select-hide');
+            select.classList.remove('open');
 
-        if (select.id === 'city_select') {
-          activeFilters.city = item.dataset.value;
-        } else if (select.id === 'company_select') {
-          activeFilters.company = item.dataset.value;
-        }
-        applyFilters();
+            if (select.id === 'city_select') {
+               activeFilters.city = item.dataset.value;
+            } else if (select.id === 'company_select') {
+               activeFilters.company = item.dataset.value;
+            }
+            applyFilters();
+         });
       });
-    });
-  });
+   });
 
-  document.addEventListener('click', (e) => {
-    document.querySelectorAll('.custom-select').forEach(select => {
-      if (!select.contains(e.target)) {
-        select.querySelector('.select-items').classList.add('select-hide');
-        select.classList.remove('open');
-      }
-    });
-  });
+   document.addEventListener('click', (e) => {
+      document.querySelectorAll('.custom-select').forEach((select) => {
+         if (!select.contains(e.target)) {
+            select.querySelector('.select-items').classList.add('select-hide');
+            select.classList.remove('open');
+         }
+      });
+   });
 };
 
 /* alusta heti sivun latautuessa */
@@ -172,9 +386,9 @@ initDropdownListeners();
 
 /* hakukenttä */
 const searchInput = document.getElementById('search_input');
-   searchInput.addEventListener('input', (e) => {
-      activeFilters.search = e.target.value.trim();
-      applyFilters();
+searchInput.addEventListener('input', (e) => {
+   activeFilters.search = e.target.value.trim();
+   applyFilters();
 });
 
 /* suosikit nappi */
@@ -196,7 +410,7 @@ const createCard = async (restaurant, isClosest) => {
    const dailyCourses = await getDailyMenu(restaurant._id, currentLang);
    const weeklyDays = await getWeeklyMenu(restaurant._id, currentLang);
    const hasDaily = dailyCourses && dailyCourses.length > 0;
-   const hasWeekly  = weeklyDays && weeklyDays.length > 0;
+   const hasWeekly = weeklyDays && weeklyDays.length > 0;
    const hasMenu = hasDaily || hasWeekly;
 
    card.innerHTML = `
@@ -237,37 +451,52 @@ const createCard = async (restaurant, isClosest) => {
       });
    }
 
-  /* show on map */
-  card.querySelector('.card_show_map').addEventListener('click', () => {
-    const [lon, lat] = restaurant.location.coordinates;
-    map.setView([lat, lon], 16);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
+   /* show on map */
+   card.querySelector('.card_show_map').addEventListener('click', () => {
+      const [lon, lat] = restaurant.location.coordinates;
+      map.setView([lat, lon], 16);
+      window.scrollTo({top: 0, behavior: 'smooth'});
+   });
 
    return card;
 };
 
-
 /* modal logiikka */
 const modals = {
-  login: document.getElementById('login_modal'),
-  register: document.getElementById('register_modal'),
-  profile: document.getElementById('profile_modal'),
-  menu: document.getElementById('menu_modal'),
+   login: document.getElementById('login_modal'),
+   register: document.getElementById('register_modal'),
+   profile: document.getElementById('profile_modal'),
+   menu: document.getElementById('menu_modal'),
 };
 
 const openModal = (name) => {
-  modals[name].classList.add('active');
+   if (name === 'profile') {
+      // Hae aina tuoreet tiedot kun modaali avataan
+      populateProfileModal();
+   }
+   modals[name].classList.add('active');
 };
 
 const closeModal = (name) => {
-  modals[name].classList.remove('active');
+   modals[name].classList.remove('active');
+
+   // Tyhjennä virheilmoitus profiilimodaalista
+   if (name === 'profile') {
+      const errorEl = document.getElementById('profile_error');
+      if (errorEl) {
+         errorEl.textContent = '';
+         errorEl.style.color = '';
+      }
+   }
 };
 
 /* avaa modalit napeista */
 document.getElementById('login_button').addEventListener('click', () => openModal('login'));
 document.getElementById('register_button').addEventListener('click', () => openModal('register'));
-document.getElementById('user_profile').addEventListener('click', () => openModal('profile'));
+document.getElementById('user_profile').addEventListener('click', () => {
+   populateProfileModal(); // Hae tuoreet tiedot ennen avaamista
+   openModal('profile');
+});
 
 /* sulje napit */
 document.getElementById('login_close').addEventListener('click', () => closeModal('login'));
@@ -276,21 +505,20 @@ document.getElementById('profile_close').addEventListener('click', () => closeMo
 
 /* sulje klikkaamalla ulkopuolelle */
 Object.entries(modals).forEach(([name, overlay]) => {
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) closeModal(name);
-  });
+   overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal(name);
+   });
 });
 
 /* vaihto login <-> register */
 document.getElementById('switch_to_register').addEventListener('click', () => {
-  closeModal('login');
-  openModal('register');
+   closeModal('login');
+   openModal('register');
 });
 document.getElementById('switch_to_login').addEventListener('click', () => {
-  closeModal('register');
-  openModal('login');
+   closeModal('register');
+   openModal('login');
 });
-
 
 /* menu modal */
 const menuModal = document.getElementById('menu_modal');
@@ -301,80 +529,82 @@ const menuModalFavourite = document.getElementById('menu_modal_favourite');
 
 /* avaa menu modal — myöhemmin kutsutaan API-datalla */
 const openMenuModal = (restaurantName, isClosest, isFavourite, dailyCourses, weeklyDays) => {
-  menuModalName.textContent = restaurantName;
-  menuModalClosest.style.display = isClosest ? 'inline-block' : 'none';
+   menuModalName.textContent = restaurantName;
+   menuModalClosest.style.display = isClosest ? 'inline-block' : 'none';
 
-  if (isFavourite) {
-    menuModalFavourite.classList.add('active');
-  } else {
-    menuModalFavourite.classList.remove('active');
-  }
+   if (isFavourite) {
+      menuModalFavourite.classList.add('active');
+   } else {
+      menuModalFavourite.classList.remove('active');
+   }
 
-  // tallenna data tab-vaihtoa varten
-  currentDailyData = dailyCourses;
-  currentWeeklyData = weeklyDays;
+   // tallenna data tab-vaihtoa varten
+   currentDailyData = dailyCourses;
+   currentWeeklyData = weeklyDays;
 
-  // näytä päivän menu oletuksena
-  document.getElementById('tab_daily').classList.add('active');
-  document.getElementById('tab_weekly').classList.remove('active');
-  renderDailyMenu(dailyCourses);
+   // näytä päivän menu oletuksena
+   document.getElementById('tab_daily').classList.add('active');
+   document.getElementById('tab_weekly').classList.remove('active');
+   renderDailyMenu(dailyCourses);
 
-  menuModal.classList.add('active');
+   menuModal.classList.add('active');
 };
 
 /* renderöi päivän menu -> */
 
 /* Helper function for normalizing diets data */
 const normalizeDiets = (diets) => {
-  if (!diets) return [];
-  if (Array.isArray(diets)) return diets;
-  if (typeof diets === 'string') {
-    // Erotellaan pilkut, välilyönnit ja mahdolliset muut erottimet
-    return diets.split(/[,; ]+/).filter(d => d.trim().length > 0);
-  }
-  return [];
+   if (!diets) return [];
+   if (Array.isArray(diets)) return diets;
+   if (typeof diets === 'string') {
+      // Erotellaan pilkut, välilyönnit ja mahdolliset muut erottimet
+      return diets.split(/[,; ]+/).filter((d) => d.trim().length > 0);
+   }
+   return [];
 };
 
 let currentDailyData = [];
 let currentWeeklyData = [];
 
 const renderDailyMenu = (courses) => {
-  if (!courses || !Array.isArray(courses) || courses.length === 0) {
-    menuModalBody.innerHTML = '<p class="menu-empty">Ei menua tänään</p>';
-    return;
-  }
+   if (!courses || !Array.isArray(courses) || courses.length === 0) {
+      menuModalBody.innerHTML = '<p class="menu-empty">Ei menua tänään</p>';
+      return;
+   }
 
-  menuModalBody.innerHTML = courses.map(course => {
-    course.diets = normalizeDiets(course.diets);
-    return `
+   menuModalBody.innerHTML = courses
+      .map((course) => {
+         course.diets = normalizeDiets(course.diets);
+         return `
     <div class="menu-item">
       <p class="menu-item-name">${course.name}</p>
       <p class="menu-item-price">${course.price}</p>
       <div class="menu-item-diets">
-        ${course.diets.map(diet => `<span class="diet-badge">${diet}</span>`).join('')}
+        ${course.diets.map((diet) => `<span class="diet-badge">${diet}</span>`).join('')}
       </div>
     </div>
   `;
-  }).join('');
+      })
+      .join('');
 };
 
 /* tab vaihto */
 document.getElementById('tab_weekly').addEventListener('click', () => {
-  document.getElementById('tab_weekly').classList.add('active');
-  document.getElementById('tab_daily').classList.remove('active');
-  renderWeeklyMenu(currentWeeklyData);
+   document.getElementById('tab_weekly').classList.add('active');
+   document.getElementById('tab_daily').classList.remove('active');
+   renderWeeklyMenu(currentWeeklyData);
 });
 
 document.getElementById('tab_daily').addEventListener('click', () => {
-  document.getElementById('tab_daily').classList.add('active');
-  document.getElementById('tab_weekly').classList.remove('active');
-  renderDailyMenu(currentDailyData);
+   document.getElementById('tab_daily').classList.add('active');
+   document.getElementById('tab_weekly').classList.remove('active');
+   renderDailyMenu(currentDailyData);
 });
 
 /* sulje */
 document.getElementById('menu_close').addEventListener('click', () => closeModal('menu'));
 menuModal.addEventListener('click', (e) => {
-  if (e.target === menuModal) closeModal('menu');
+   if (e.target === menuModal) closeModal('menu');
 });
 /* näytä kartalla menu-modalista */
 document.getElementById('menu_show_map').addEventListener('click', () => {
@@ -385,81 +615,84 @@ document.getElementById('menu_show_map').addEventListener('click', () => {
    const restaurantName = document.getElementById('menu_modal_name').textContent;
 
    // Etsi ravintola listasta nimen perusteella
-   const restaurant = allRestaurants.find(r => r.name === restaurantName);
+   const restaurant = allRestaurants.find((r) => r.name === restaurantName);
 
    if (restaurant && restaurant.location && restaurant.location.coordinates) {
       const [lon, lat] = restaurant.location.coordinates;
       map.setView([lat, lon], 16);
       const mapElement = document.getElementById('map');
       if (mapElement) {
-      mapElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+         mapElement.scrollIntoView({behavior: 'smooth', block: 'center'});
       }
-   }
-   else {
+   } else {
       console.error('Ravintolaa ei löytynyt kartalle:', restaurantName);
       // Vaihtoehtoinen toiminto: avaa google maps
       if (restaurant && restaurant.address) {
-      const query = encodeURIComponent(`${restaurant.name} ${restaurant.address}`);
-      window.open(`https://www.google.com/maps/search/${query}`, '_blank');
+         const query = encodeURIComponent(`${restaurant.name} ${restaurant.address}`);
+         window.open(`https://www.google.com/maps/search/${query}`, '_blank');
       }
    }
 });
 
 /* rendre weekly menu */
 const renderWeeklyMenu = (days) => {
-  if (!days || days.length === 0) {
-    menuModalBody.innerHTML = '<p class="menu-empty">Ei viikon menua saatavilla</p>';
-    return;
-  }
+   if (!days || days.length === 0) {
+      menuModalBody.innerHTML = '<p class="menu-empty">Ei viikon menua saatavilla</p>';
+      return;
+   }
 
-  menuModalBody.innerHTML = days.map(day => {
-   // normalize diets for each course in the day
-   day.courses = day.courses.map(course => {
-     course.diets = normalizeDiets(course.diets);
-     return course;
-   });
-   return `
+   menuModalBody.innerHTML = days
+      .map((day) => {
+         // normalize diets for each course in the day
+         day.courses = day.courses.map((course) => {
+            course.diets = normalizeDiets(course.diets);
+            return course;
+         });
+         return `
     <div class="menu-day">
       <p class="menu-day-title">${day.date}</p>
-      ${day.courses.map(course => `
+      ${day.courses
+         .map(
+            (course) => `
         <div class="menu-item">
           <p class="menu-item-name">${course.name.trim()}</p>
           ${course.price ? `<p class="menu-item-price">${course.price}</p>` : ''}
           <div class="menu-item-diets">
-            ${course.diets.map(diet => `<span class="diet-badge">${diet}</span>`).join('')}
+            ${course.diets.map((diet) => `<span class="diet-badge">${diet}</span>`).join('')}
           </div>
         </div>
-      `).join('')}
+      `
+         )
+         .join('')}
     </div>
   `;
-  }).join('');
+      })
+      .join('');
 };
 
 /* render all restaurant cards into the list */
 const renderCards = async (restaurants, closestIdx = -1) => {
-  const container = document.getElementById('restaurant_cards');
-  if (!container) return;
+   const container = document.getElementById('restaurant_cards');
+   if (!container) return;
 
-  if (!restaurants || restaurants.length === 0) {
-    container.innerHTML = '<p class="no-restaurants">Ei ravintoloita saatavilla</p>';
-    return;
-  }
+   if (!restaurants || restaurants.length === 0) {
+      container.innerHTML = '<p class="no-restaurants">Ei ravintoloita saatavilla</p>';
+      return;
+   }
 
-  const totalPages = Math.ceil(restaurants.length / cardsPerPage);
-  const start = (currentPage - 1) * cardsPerPage;
-  const end = start + cardsPerPage;
-  const pageRestaurants = restaurants.slice(start, end);
+   const totalPages = Math.ceil(restaurants.length / cardsPerPage);
+   const start = (currentPage - 1) * cardsPerPage;
+   const end = start + cardsPerPage;
+   const pageRestaurants = restaurants.slice(start, end);
 
-  container.innerHTML = '';
+   container.innerHTML = '';
 
-  /* odota että kaikki kortit on luotu */
-  const cards = await Promise.all(
-    pageRestaurants.map((rest, idx) => createCard(rest, (start + idx) === closestIdx))
-  );
+   /* odota että kaikki kortit on luotu */
+   const cards = await Promise.all(pageRestaurants.map((rest, idx) => createCard(rest, start + idx === closestIdx)));
 
-  cards.forEach(card => container.appendChild(card));
+   cards.forEach((card) => container.appendChild(card));
 
-  renderPagination(totalPages);
+   renderPagination(totalPages);
 };
 
 const renderPagination = (totalPages) => {
@@ -479,8 +712,8 @@ const renderPagination = (totalPages) => {
    prevBtn.disabled = currentPage === 1;
    prevBtn.addEventListener('click', () => {
       currentPage--;
-   renderCards(currentFilteredRestaurants || allRestaurants, closestIndex);
-   window.scrollTo({ top: document.getElementById('restaurant_cards').offsetTop - 20, behavior: 'smooth' });
+      renderCards(currentFilteredRestaurants || allRestaurants, closestIndex);
+      window.scrollTo({top: document.getElementById('restaurant_cards').offsetTop - 20, behavior: 'smooth'});
    });
 
    /* sivunumero napit */
@@ -489,30 +722,23 @@ const renderPagination = (totalPages) => {
 
    for (let i = 1; i <= totalPages; i++) {
       /* näytä vain lähellä olevat sivut */
-      if (
-      i === 1 ||
-      i === totalPages ||
-      (i >= currentPage - 1 && i <= currentPage + 1)
-      ) {
-      const btn = document.createElement('button');
-      btn.textContent = i;
-      btn.classList.add('page-btn');
-      if (i === currentPage) btn.classList.add('active');
-      btn.addEventListener('click', () => {
-         currentPage = i;
-         renderCards(currentFilteredRestaurants || allRestaurants, closestIndex);
-         window.scrollTo({ top: document.getElementById('restaurant_cards').offsetTop - 20, behavior: 'smooth' });
-      });
-      pages.appendChild(btn);
-      } else if (
-      i === currentPage - 2 ||
-      i === currentPage + 2
-      ) {
-      /* lisää ... välit */
-      const dots = document.createElement('span');
-      dots.textContent = '...';
-      dots.classList.add('page-dots');
-      pages.appendChild(dots);
+      if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+         const btn = document.createElement('button');
+         btn.textContent = i;
+         btn.classList.add('page-btn');
+         if (i === currentPage) btn.classList.add('active');
+         btn.addEventListener('click', () => {
+            currentPage = i;
+            renderCards(currentFilteredRestaurants || allRestaurants, closestIndex);
+            window.scrollTo({top: document.getElementById('restaurant_cards').offsetTop - 20, behavior: 'smooth'});
+         });
+         pages.appendChild(btn);
+      } else if (i === currentPage - 2 || i === currentPage + 2) {
+         /* lisää ... välit */
+         const dots = document.createElement('span');
+         dots.textContent = '...';
+         dots.classList.add('page-dots');
+         pages.appendChild(dots);
       }
    }
 
@@ -524,7 +750,7 @@ const renderPagination = (totalPages) => {
    nextBtn.addEventListener('click', () => {
       currentPage++;
       renderCards(currentFilteredRestaurants || allRestaurants, closestIndex);
-      window.scrollTo({ top: document.getElementById('restaurant_cards').offsetTop - 20, behavior: 'smooth' });
+      window.scrollTo({top: document.getElementById('restaurant_cards').offsetTop - 20, behavior: 'smooth'});
    });
 
    pagination.appendChild(prevBtn);

@@ -37,7 +37,75 @@ const getWeeklyMenu = async (id, lang = 'fi') => {
 };
 
 // Hae käyttäjän profiilitiedot
+const getUserProfile = async () => {
+   const token = getToken();
+   if (!token) return null;
+
+   try {
+      const response = await fetch(`${API_BASE_URL}/users/token`, {
+         headers: {
+            Authorization: `Bearer ${token}`,
+         },
+      });
+
+      if (!response.ok) return null;
+      return await response.json();
+   } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+   }
+};
 
 // Päivitä käyttäjän tiedot
+const updateUserProfile = async (userData) => {
+   const token = getToken();
+   if (!token) return {success: false, message: 'Ei kirjautumistokenia'};
+
+   try {
+      const response = await fetch(`${API_BASE_URL}/users`, {
+         method: 'PUT',
+         headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+         },
+         body: JSON.stringify(userData),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+         return {success: false, message: data.message || 'Päivitys epäonnistui'};
+      }
+      return {success: true, user: data};
+   } catch (error) {
+      console.error('Error updating profile:', error);
+      return {success: false, message: 'Verkkovirhe, yritä uudelleen'};
+   }
+};
 
 // Lataa profiilikuva
+const uploadAvatar = async (file) => {
+   const token = getToken();
+   if (!token) return {success: false, message: 'Ei kirjautumistokenia'};
+
+   const formData = new FormData();
+   formData.append('avatar', file);
+
+   try {
+      const response = await fetch(`${API_BASE_URL}/users/avatar`, {
+         method: 'POST',
+         headers: {
+            Authorization: `Bearer ${token}`,
+         },
+         body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+         return {success: false, message: data.message || 'Kuvan lataus epäonnistui'};
+      }
+      return {success: true, avatarUrl: data.avatar};
+   } catch (error) {
+      console.error('Error uploading avatar:', error);
+      return {success: false, message: 'Verkkovirhe, yritä uudelleen'};
+   }
+};

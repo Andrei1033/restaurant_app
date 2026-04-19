@@ -7,6 +7,7 @@ const cardsPerPage = 8;
 const init = async () => {
    /* alusta kartta */
    initMap();
+   initProfileModal();
 
    /* tarkista onko käyttäjä jo kirjautunut */
    const user = await checkToken();
@@ -15,10 +16,7 @@ const init = async () => {
    }
 
    /* hae ravintolat */
-   const [restaurants, location] = await Promise.all([
-      getRestaurants(),
-      getUserLocation()
-   ]);
+   const [restaurants, location] = await Promise.all([getRestaurants(), getUserLocation()]);
 
    allRestaurants = restaurants;
    userLocation = location;
@@ -26,7 +24,7 @@ const init = async () => {
    /* laske etäisyydet ja lajittele lähimmästä alkaen, jos sijainti saatavilla */
    if (userLocation && Array.isArray(allRestaurants) && allRestaurants.length > 0) {
       const [userLat, userLon] = userLocation;
-      allRestaurants.forEach(rest => {
+      allRestaurants.forEach((rest) => {
          const [lon, lat] = rest.location.coordinates;
          rest._distance = getDistance(userLat, userLon, lat, lon);
       });
@@ -42,9 +40,8 @@ const init = async () => {
          fillColor: '#3b8beb',
          color: '#fff',
          weight: 2,
-         fillOpacity: 1
+         fillOpacity: 1,
       }).addTo(map);
-
    } else {
       closestIndex = -1;
    }
@@ -60,10 +57,10 @@ const init = async () => {
 /* populate Filters */
 const populateFilters = (restaurants) => {
    /* kaupungit */
-   const cities = [...new Set(restaurants.map(r => r.city).filter(Boolean))].sort();
+   const cities = [...new Set(restaurants.map((r) => r.city).filter(Boolean))].sort();
    const cityItems = document.querySelector('#city_select .select-items');
    cityItems.innerHTML = '<div data-value="">Kaikki kaupungit</div>';
-   cities.forEach(city => {
+   cities.forEach((city) => {
       const div = document.createElement('div');
       div.dataset.value = city;
       div.textContent = city;
@@ -71,10 +68,10 @@ const populateFilters = (restaurants) => {
    });
 
    /* yhtiöt */
-   const companies = [...new Set(restaurants.map(r => r.company).filter(Boolean))].sort();
+   const companies = [...new Set(restaurants.map((r) => r.company).filter(Boolean))].sort();
    const companyItems = document.querySelector('#company_select .select-items');
    companyItems.innerHTML = '<div data-value="">Kaikki yhtiöt</div>';
-   companies.forEach(company => {
+   companies.forEach((company) => {
       const div = document.createElement('div');
       div.dataset.value = company;
       div.textContent = company;
