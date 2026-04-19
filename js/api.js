@@ -72,9 +72,19 @@ const updateUserProfile = async (userData) => {
       });
 
       const data = await response.json();
+
       if (!response.ok) {
-         return {success: false, message: data.message || 'Päivitys epäonnistui'};
+         // Palautetaan backendin virheviesti tai luodaan oma
+         let errorMessage = data.message || 'Päivitys epäonnistui';
+
+         // Jos backend palauttaa MongoDB:n duplicate key virheen
+         if (data.message && data.message.includes('E11000')) {
+            errorMessage = data.message;
+         }
+
+         return {success: false, message: errorMessage};
       }
+
       return {success: true, user: data};
    } catch (error) {
       console.error('Error updating profile:', error);
@@ -106,6 +116,35 @@ const uploadAvatar = async (file) => {
       return {success: true, avatarUrl: data.avatar};
    } catch (error) {
       console.error('Error uploading avatar:', error);
+      return {success: false, message: 'Verkkovirhe, yritä uudelleen'};
+   }
+};
+
+// Poista käyttäjätili
+const deleteUserAccount = async () => {
+   const token = getToken();
+   if (!token) return {success: false, message: 'Ei kirjautumistokenia'};
+
+   try {
+      const response = await fetch(`${API_BASE_URL}/users`, {
+         method: 'DELETE',
+         headers: {
+            Authorization: `Bearer ${token}`,
+         },
+      });
+
+      if (!response.ok) {
+         const data = await response.json();
+         return {success: false, message: data.message || 'Tilin poisto epäonnistui'};
+      }
+
+      // Poista token ja tee logout
+      removeToken();
+      updateHeaderUI(null);
+
+      return {success: true, message: 'Tili poistettu onnistuneesti'};
+   } catch (error) {
+      console.error('Error deleting account:', error);
       return {success: false, message: 'Verkkovirhe, yritä uudelleen'};
    }
 };

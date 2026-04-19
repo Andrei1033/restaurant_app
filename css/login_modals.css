@@ -1,207 +1,232 @@
 /* modal overlay */
 .modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-  align-items: center;
-  justify-content: center;
-  animation: fadeIn 0.2s ease;
+   display: none;
+   position: fixed;
+   inset: 0;
+   background: rgba(0, 0, 0, 0.5);
+   z-index: 1000;
+   align-items: center;
+   justify-content: center;
+   animation: fadeIn 0.2s ease;
 }
 
 .modal-overlay.active {
-  display: flex;
+   display: flex;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+   from {
+      opacity: 0;
+   }
+   to {
+      opacity: 1;
+   }
 }
 
 /* modal box */
 .modal {
-  background: #fff;
-  border-radius: 12px;
-  padding: 2rem;
-  width: 100%;
-  max-width: 420px;
-  margin: 1rem;
-  animation: slideUp 0.25s ease;
+   background: #fff;
+   border-radius: 12px;
+   padding: 2rem;
+   width: 100%;
+   max-width: 420px;
+   margin: 1rem;
+   animation: slideUp 0.25s ease;
 }
 
 @keyframes slideUp {
-  from { transform: translateY(30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+   from {
+      transform: translateY(30px);
+      opacity: 0;
+   }
+   to {
+      transform: translateY(0);
+      opacity: 1;
+   }
 }
 
 .modal h2 {
-  margin-bottom: 1.5rem;
-  font-size: 1.3rem;
+   margin-bottom: 1.5rem;
+   font-size: 1.3rem;
 }
 
 /* input kentät */
 .input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin-bottom: 1rem;
+   display: flex;
+   flex-direction: column;
+   gap: 5px;
+   margin-bottom: 1rem;
 }
 
 .input-group label {
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: rgba(4, 53, 88);
+   font-size: 12px;
+   font-weight: 600;
+   text-transform: uppercase;
+   letter-spacing: 0.05em;
+   color: rgba(4, 53, 88);
 }
 
 .input-group input {
-  padding: 10px 14px;
-  border: 1px solid rgb(225, 224, 220);
-  border-radius: 6px;
-  font-family: 'Open Sans', sans-serif;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
+   padding: 10px 14px;
+   border: 1px solid rgb(225, 224, 220);
+   border-radius: 6px;
+   font-family: 'Open Sans', sans-serif;
+   font-size: 14px;
+   outline: none;
+   transition: border-color 0.2s;
 }
 
 .input-group input:focus {
-  border-color: rgba(4, 53, 88);
+   border-color: rgba(4, 53, 88);
 }
 
 /* modal footer */
 .modal-footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 1.5rem;
-  border-top: 1px solid rgb(225, 224, 220);
-  padding-top: 1rem;
+   display: flex;
+   align-items: center;
+   justify-content: flex-end;
+   gap: 10px;
+   margin-top: 1.5rem;
+   border-top: 1px solid rgb(225, 224, 220);
+   padding-top: 1rem;
 }
 
 .modal-switch {
-  margin: 0;
-  margin-right: auto;
-  font-size: 13px;
-  color: #888;
+   margin: 0;
+   margin-right: auto;
+   font-size: 13px;
+   color: #888;
 }
 
 .modal-switch span {
-  color: rgba(4, 53, 88);
-  cursor: pointer;
-  font-weight: 600;
-  text-decoration: underline;
+   color: rgba(4, 53, 88);
+   cursor: pointer;
+   font-weight: 600;
+   text-decoration: underline;
 }
 
 .modal-close-btn {
-  padding: 8px 16px;
-  background: transparent;
-  border: 1px solid rgb(225, 224, 220);
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
+   padding: 8px 16px;
+   background: transparent;
+   border: 1px solid rgb(225, 224, 220);
+   border-radius: 6px;
+   cursor: pointer;
+   font-size: 13px;
+   transition: all 0.2s;
 }
 
 .modal-close-btn:hover {
-  background: rgba(0,0,0,0.05);
+   background: rgba(0, 0, 0, 0.05);
 }
 
 .modal-submit-btn {
-  padding: 8px 20px;
-  background: rgba(4, 53, 88);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: opacity 0.2s;
+   padding: 8px 20px;
+   background: rgba(4, 53, 88);
+   color: #fff;
+   border: none;
+   border-radius: 6px;
+   cursor: pointer;
+   font-size: 13px;
+   transition: opacity 0.2s;
 }
 
 .modal-submit-btn:hover {
-  opacity: 0.85;
+   opacity: 0.85;
 }
 
 #logout_button {
-  background: transparent;
-  border: 1px solid rgba(4, 53, 88, 0.3);
-  border-radius: 5px;
-  padding: 5px 10px;
-  font-size: 12px;
-  color: rgba(4, 53, 88);
-  cursor: pointer;
-  transition: all 0.2s;
+   background: transparent;
+   border: 1px solid rgba(4, 53, 88, 0.3);
+   border-radius: 5px;
+   padding: 5px 10px;
+   font-size: 13px;
+   color: rgba(4, 53, 88);
+   cursor: pointer;
+   transition: all 0.2s;
 }
 
 #logout_button:hover {
-  background: rgba(4, 53, 88);
-  color: #fff;
+   background: rgba(4, 53, 88);
+   color: #fff;
+}
+
+.delete-account-btn {
+   background-color: #dc3545;
+   color: white;
+   border: none;
+   padding: 10px 15px;
+   border-radius: 6px;
+   cursor: pointer;
+   font-size: 13px;
+   transition: background-color 0.3s;
+}
+
+.delete-account-btn:hover {
+   background-color: #df1024;
 }
 
 /* virheviesti */
 .modal-error {
-  color: #c0392b;
-  font-size: 13px;
-  margin: 0;
-  min-height: 18px;
+   color: #c0392b;
+   font-size: 13px;
+   margin: 0;
+   min-height: 18px;
 }
 
 /* profiili avatar section */
 .profile-avatar-section {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 1.5rem;
+   display: flex;
+   align-items: center;
+   gap: 16px;
+   margin-bottom: 1.5rem;
 }
 
 #profile_avatar_preview {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgb(225, 224, 220);
-  background: rgba(4, 53, 88, 0.08);
+   width: 64px;
+   height: 64px;
+   border-radius: 50%;
+   object-fit: cover;
+   border: 2px solid rgb(225, 224, 220);
+   background: rgba(4, 53, 88, 0.08);
 }
 
 .avatar-upload-btn {
-  padding: 7px 14px;
-  border: 1px solid rgba(4, 53, 88);
-  border-radius: 6px;
-  color: rgba(4, 53, 88);
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: 'Inter', sans-serif;
-  font-weight: 600;
+   padding: 7px 14px;
+   border: 1px solid rgba(4, 53, 88);
+   border-radius: 6px;
+   color: rgba(4, 53, 88);
+   font-size: 13px;
+   cursor: pointer;
+   transition: all 0.2s;
+   font-family: 'Inter', sans-serif;
+   font-weight: 600;
 }
 
 .avatar-upload-btn:hover {
-  background: rgba(4, 53, 88);
-  color: #fff;
+   background: rgba(4, 53, 88);
+   color: #fff;
 }
 
 /* header profiili */
 #user_profile {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  margin-left: 10px;
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   cursor: pointer;
+   margin-left: 10px;
 }
 
 #header_avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(4, 53, 88);
-  background: rgba(4, 53, 88, 0.08);
+   width: 38px;
+   height: 38px;
+   border-radius: 50%;
+   object-fit: cover;
+   border: 2px solid rgba(4, 53, 88);
+   background: rgba(4, 53, 88, 0.08);
 }
 
 #header_username {
-  font-size: 14px;
-  font-weight: 600;
-  color: rgba(4, 53, 88);
+   font-size: 14px;
+   font-weight: 600;
+   color: rgba(4, 53, 88);
 }

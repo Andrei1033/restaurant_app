@@ -24,13 +24,11 @@ const updateHeaderUI = (user) => {
    const loginButtons = document.getElementById('login_buttons');
    const userProfile = document.getElementById('user_profile');
    const headerAvatar = document.getElementById('header_avatar');
-   const headerUsername = document.getElementById('header_username');
 
    if (user) {
       /* kirjautunut — piilota napit, näytä profiili */
       loginButtons.style.display = 'none';
       userProfile.style.display = 'block';
-      headerUsername.textContent = user.username;
 
       if (user.avatar) {
          headerAvatar.src = `https://media2.edu.metropolia.fi/restaurant/uploads/${user.avatar}`;
@@ -185,12 +183,57 @@ const handleProfileUpdate = async () => {
    const passwordInput = document.getElementById('profile_password');
    const errorEl = document.getElementById('profile_error');
 
+   // Tyhjennä vanha virhe
+   errorEl.textContent = '';
+   errorEl.style.color = '#f44336';
+
    const updatedData = {};
+   const errors = [];
 
-   if (usernameInput.value.trim()) updatedData.username = usernameInput.value.trim();
-   if (emailInput.value.trim()) updatedData.email = emailInput.value.trim();
-   if (passwordInput.value.trim()) updatedData.password = passwordInput.value.trim();
+   // Tarkista käyttäjänimi (jos yritetään vaihtaa)
+   if (usernameInput.value.trim()) {
+      const newUsername = usernameInput.value.trim();
+      if (newUsername.length < 3) {
+         errors.push('Käyttäjänimen tulee olla vähintään 3 merkkiä pitkä');
+      } else if (newUsername.length > 30) {
+         errors.push('Käyttäjänimi voi olla enintään 30 merkkiä pitkä');
+      } else if (!/^[a-zA-Z0-9_.-]+$/.test(newUsername)) {
+         errors.push('Käyttäjänimi voi sisältää vain kirjaimia, numeroita, alaviivoja, pisteitä ja viivoja');
+      } else {
+         updatedData.username = newUsername;
+      }
+   }
 
+   // Tarkista sähköposti (jos yritetään vaihtaa)
+   if (emailInput.value.trim()) {
+      const newEmail = emailInput.value.trim();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(newEmail)) {
+         errors.push('Syötä kelvollinen sähköpostiosoite');
+      } else {
+         updatedData.email = newEmail;
+      }
+   }
+
+   // Tarkista salasana (jos yritetään vaihtaa)
+   if (passwordInput.value.trim()) {
+      const newPassword = passwordInput.value.trim();
+      if (newPassword.length < 6) {
+         errors.push('Salasanan tulee olla vähintään 6 merkkiä pitkä');
+      } else if (newPassword.length > 100) {
+         errors.push('Salasana on liian pitkä');
+      } else {
+         updatedData.password = newPassword;
+      }
+   }
+
+   // Näytä validaatiovirheet
+   if (errors.length > 0) {
+      errorEl.textContent = errors.join('. ');
+      return;
+   }
+
+   // Jos ei mitään päivitettävää
    if (Object.keys(updatedData).length === 0) {
       errorEl.textContent = 'Ei muutoksia päivitettäväksi';
       setTimeout(() => {
@@ -219,7 +262,7 @@ const handleProfileUpdate = async () => {
          document.getElementById('profile_username').placeholder = updatedUser.username || 'Käyttäjänimi';
          document.getElementById('profile_email').placeholder = updatedUser.email || 'Sähköposti';
 
-         // Päivitä profiilikuva (jos avatar on muuttunut)
+         // Päivitä profiilikuva
          if (updatedUser.avatar) {
             const avatarUrl = `https://media2.edu.metropolia.fi/restaurant/uploads/${updatedUser.avatar}?t=${Date.now()}`;
             document.getElementById('profile_avatar_preview').src = avatarUrl;
@@ -235,15 +278,33 @@ const handleProfileUpdate = async () => {
       errorEl.textContent = 'Profiili päivitetty onnistuneesti!';
       setTimeout(() => {
          errorEl.textContent = '';
-         errorEl.style.color = '';
       }, 3000);
    } else {
-      errorEl.style.color = '#f44336';
-      errorEl.textContent = result.message;
+      // Käsittele backend-virheet käyttäjäystävällisesti
+      let errorMessage = '';
+
+      if (result.message.includes('E11000') || result.message.includes('duplicate key')) {
+         if (result.message.includes('email')) {
+            errorMessage = 'Tämä sähköpostiosoite on jo toisen käyttäjän käytössä. Käytä toista sähköpostia.';
+         } else if (result.message.includes('username')) {
+            errorMessage = 'Tämä käyttäjänimi on jo varattu. Valitse toinen käyttäjänimi.';
+         } else {
+            errorMessage = 'Sähköposti tai käyttäjänimi on jo käytössä.';
+         }
+      } else if (result.message.includes('password')) {
+         errorMessage = 'Salasana on liian heikko. Käytä vähintään 6 merkkiä.';
+      } else if (result.message.includes('validation')) {
+         errorMessage = 'Tarkista että kaikki kentät on täytetty oikein.';
+      } else {
+         errorMessage = result.message || 'Päivitys epäonnistui. Yritä uudelleen.';
+      }
+
+      errorEl.textContent = errorMessage;
       setTimeout(() => {
-         errorEl.textContent = '';
-         errorEl.style.color = '';
-      }, 3000);
+         if (errorEl.textContent === errorMessage) {
+            errorEl.textContent = '';
+         }
+      }, 5000);
    }
 };
 
@@ -299,6 +360,177 @@ const initProfileModal = () => {
          document.getElementById('profile_avatar_preview').src = '../assets/tremplate_profile.jpg';
       });
    }
+
+   createConfirmModal();
+   // Poista tili -nappi
+   const deleteAccountBtn = document.getElementById('delete_account_button');
+   if (deleteAccountBtn) {
+      const newDeleteBtn = deleteAccountBtn.cloneNode(true);
+      deleteAccountBtn.parentNode.replaceChild(newDeleteBtn, deleteAccountBtn);
+
+      newDeleteBtn.addEventListener('click', handleDeleteAccount);
+   }
+};
+
+// Luo profili poisto vahvistusmodaali
+const createConfirmModal = () => {
+   // Tarkista onko jo olemassa
+   if (document.getElementById('confirm_modal')) return;
+
+   const confirmModalHTML = `
+      <div id="confirm_modal" class="modal-overlay">
+         <div class="modal confirm-modal">
+            <h3>Vahvista tilin poisto</h3>
+            <p>Oletko varma että haluat poistaa tilisi?<br>Tätä toimintoa ei voi peruuttaa.</p>
+            <div class="modal-footer">
+               <button id="confirm_cancel_btn">Peruuta</button>
+               <button id="confirm_delete_btn" class="delete-account-btn">Poista tili</button>
+            </div>
+         </div>
+      </div>
+   `;
+
+   document.body.insertAdjacentHTML('beforeend', confirmModalHTML);
+
+   // Lisää tyylit vahvistusmodaalille
+   const style = document.createElement('style');
+   style.textContent = `
+      .confirm-modal {
+         max-width: 400px;
+      }
+      .confirm-modal p {
+         margin: 20px 0;
+         text-align: center;
+         line-height: 1.5;
+      }
+      #confirm_cancel_btn {
+         background-color: #6c757d;
+         color: white;
+         border: none;
+         padding: 10px 20px;
+         border-radius: 6px;
+         cursor: pointer;
+         font-weight: 600;
+      }
+      #confirm_cancel_btn:hover {
+         background-color: #5a6268;
+      }
+   `;
+   document.head.appendChild(style);
+};
+
+// Käsittele tilin poisto
+const handleDeleteAccount = async () => {
+   const confirmModal = document.getElementById('confirm_modal');
+   const cancelBtn = document.getElementById('confirm_cancel_btn');
+   const deleteBtn = document.getElementById('confirm_delete_btn');
+
+   // Näytä vahvistusmodaali
+   confirmModal.classList.add('active');
+
+   // Poista vanhat listenerit
+   const newCancelBtn = cancelBtn.cloneNode(true);
+   cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+   const newDeleteBtn = deleteBtn.cloneNode(true);
+   deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
+
+   // Peruuta toiminto
+   newCancelBtn.addEventListener('click', () => {
+      confirmModal.classList.remove('active');
+   });
+
+   // Vahvista poisto
+   newDeleteBtn.addEventListener('click', async () => {
+      // Poista vanha teksti ja disabloi nappi
+      const originalText = newDeleteBtn.textContent;
+      newDeleteBtn.textContent = 'Poistetaan...';
+      newDeleteBtn.disabled = true;
+
+      const result = await deleteUserAccount();
+
+      if (result.success) {
+         // Sulje molemmat modaalit
+         confirmModal.classList.remove('active');
+         closeModal('profile');
+
+         // Näytä onnistumisviesti (voit luoda pienen ilmoituksen)
+         showNotification('Tilisi on poistettu onnistuneesti', 'success');
+
+         // Päivitä header (näytetään kirjautumisnapot)
+         updateHeaderUI(null);
+
+         // Ohjaa etusivulle tai päivitä näkymä
+         setTimeout(() => {
+            window.location.reload();
+         }, 2000);
+      } else {
+         newDeleteBtn.textContent = originalText;
+         newDeleteBtn.disabled = false;
+
+         // Näytä virheilmoitus
+         showNotification(result.message, 'error');
+         confirmModal.classList.remove('active');
+      }
+   });
+
+   // Sulje klikkaamalla overlayta
+   confirmModal.addEventListener('click', (e) => {
+      if (e.target === confirmModal) {
+         confirmModal.classList.remove('active');
+      }
+   });
+};
+
+// Apufunktio ilmoituksille
+const showNotification = (message, type = 'success') => {
+   // Poista vanha notifikaatio jos on
+   const oldNotification = document.getElementById('notification');
+   if (oldNotification) oldNotification.remove();
+
+   const notification = document.createElement('div');
+   notification.id = 'notification';
+   notification.textContent = message;
+   notification.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      background-color: ${type === 'success' ? '#4caf50' : '#f44336'};
+      color: white;
+      border-radius: 8px;
+      font-weight: 600;
+      z-index: 10000;
+      animation: slideIn 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+   `;
+
+   document.body.appendChild(notification);
+
+   // Lisää animaatio
+   if (!document.querySelector('#notification-style')) {
+      const style = document.createElement('style');
+      style.id = 'notification-style';
+      style.textContent = `
+         @keyframes slideIn {
+            from {
+               transform: translateX(100%);
+               opacity: 0;
+            }
+            to {
+               transform: translateX(0);
+               opacity: 1;
+            }
+         }
+      `;
+      document.head.appendChild(style);
+   }
+
+   // Poista notifikaatio 3 sekunnin jälkeen
+   setTimeout(() => {
+      notification.style.animation = 'slideIn 0.3s ease reverse';
+      setTimeout(() => notification.remove(), 300);
+   }, 3000);
 };
 
 /* filters*/
