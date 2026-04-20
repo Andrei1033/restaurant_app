@@ -1,3 +1,6 @@
+window.renderCards = window.renderCards || function () {};
+window.rendreCards = window.rendreCards || function () {};
+
 let currentLang = 'fi';
 let allRestaurants = [];
 let closestIndex = 0;
@@ -5,9 +8,20 @@ let currentPage = 1;
 const cardsPerPage = 8;
 
 const init = async () => {
-   /* alusta kartta */
+   // Odota että ui.js on ladattu
+   if (typeof renderCards === 'undefined') {
+      console.log('Odota renderCards...');
+      setTimeout(init, 100);
+      return;
+   }
+
    initMap();
    initProfileModal();
+   initFavouriteFilter();
+   initMenuModalFavourite();
+
+   // Lataa käyttäjän suosikki
+   await loadUserFavourite();
 
    /* tarkista onko käyttäjä jo kirjautunut */
    const user = await checkToken();

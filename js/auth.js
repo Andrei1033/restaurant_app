@@ -69,6 +69,17 @@ const login = async (identifier, password) => {
    }
 };
 
+const originalLogin = login;
+window.login = async (identifier, password) => {
+   const result = await originalLogin(identifier, password);
+   if (result.success && result.user) {
+      updateHeaderUI(result.user);
+      await loadUserFavourite(); // Lataa suosikki kirjautumisen jälkeen
+      applyFilters(); // Päivitä näkymä
+   }
+   return result;
+};
+
 // registration
 const register = async (username, email, password) => {
    try {
@@ -123,6 +134,16 @@ document.getElementById('register_submit').addEventListener('click', async () =>
 const logout = () => {
    removeToken();
    updateHeaderUI(null);
+   currentFavouriteId = null;
+   updateAllHeartButtons();
+
+   // Jos suosikkifiltteri on päällä, poista se
+   if (activeFilters.favourite) {
+      activeFilters.favourite = false;
+      const favButton = document.getElementById('favourites_button');
+      if (favButton) favButton.classList.remove('active');
+      applyFilters();
+   }
 
    // Sulje kaikki modaalit
    const modals = ['login', 'register', 'profile', 'menu', 'confirm_modal'];

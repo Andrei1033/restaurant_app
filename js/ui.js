@@ -5,6 +5,7 @@ let activeFilters = {
    favourite: false,
 };
 let currentFilteredRestaurants = null;
+let currentFavouriteId = null;
 
 /* language select ui*/
 const langBtns = document.querySelectorAll('.lang-btn');
@@ -533,6 +534,107 @@ const showNotification = (message, type = 'success') => {
    }, 3000);
 };
 
+// Lataa käyttäjän suosikki
+const loadUserFavourite = async () => {
+   const user = await getUserProfile();
+   if (user && user.favouriteRestaurant) {
+      currentFavouriteId = user.favouriteRestaurant;
+   } else {
+      currentFavouriteId = null;
+   }
+
+   // Päivitä kaikkien sydämien tilat
+   updateAllHeartButtons();
+};
+
+// Päivitä tietyn kortin sydännappi
+const updateHeartButton = (card, restaurantId, isFavourite) => {
+   const heartBtn = card.querySelector('.card_favourite');
+   if (!heartBtn) return;
+
+   if (isFavourite) {
+      heartBtn.classList.add('active');
+   } else {
+      heartBtn.classList.remove('active');
+   }
+};
+
+// Päivitä kaikki sydännapit
+const updateAllHeartButtons = () => {
+   // Päivitä korttien sydämet
+   document.querySelectorAll('.card').forEach((card) => {
+      const restaurantId = card.dataset.id;
+      if (restaurantId) {
+         updateHeartButton(card, restaurantId, currentFavouriteId === restaurantId);
+      }
+   });
+
+   // Päivitä menu-modalin sydän
+   const menuHeart = document.getElementById('menu_modal_favourite');
+   if (menuHeart && currentRestaurantInMenu) {
+      if (currentFavouriteId === currentRestaurantInMenu) {
+         menuHeart.classList.add('active');
+      } else {
+         menuHeart.classList.remove('active');
+      }
+   }
+};
+
+// Käsittele suosikin asetus/poisto
+const handleFavouriteToggle = async (restaurantId, heartButton) => {
+   const token = getToken();
+   if (!token) {
+      showNotification('Kirjaudu sisään asettaaksesi suosikkeja', 'error');
+      openModal('login');
+      return false;
+   }
+
+   // Tarkista onko tämä jo suosikki
+   const isFavourite = currentFavouriteId === restaurantId;
+
+   if (isFavourite) {
+      // Poista suosikki
+      const result = await removeFavouriteRestaurant();
+      if (result.success) {
+         currentFavouriteId = null;
+         if (heartButton) heartButton.classList.remove('active');
+         showNotification('Suosikki poistettu', 'success');
+
+         // Jos suosikkifiltteri on päällä, päivitä näkymä
+         if (activeFilters.favourite) {
+            applyFilters();
+         }
+         return false;
+      } else {
+         showNotification(result.message, 'error');
+         return false;
+      }
+   } else {
+      // Aseta uusi suosikki (korvaa vanhan)
+      const result = await updateFavouriteRestaurant(restaurantId);
+      if (result.success) {
+         currentFavouriteId = restaurantId;
+
+         // Päivitä kaikki sydännapit (poista active muualta)
+         updateAllHeartButtons();
+
+         showNotification('Suosikki asetettu', 'success');
+
+         // Jos suosikkifiltteri on päällä, päivitä näkymä
+         if (activeFilters.favourite) {
+            applyFilters();
+         }
+         return true;
+      } else {
+         showNotification(result.message, 'error');
+         return false;
+      }
+   }
+};
+
+// Muuttuja menu-modalin nykyiselle ravintolalle
+let currentRestaurantInMenu = null;
+
 /* filters*/
 const applyFilters = () => {
    let filtered = [...allRestaurants];
@@ -553,10 +655,14 @@ const applyFilters = () => {
       filtered = filtered.filter((r) => r.name?.toLowerCase().includes(search) || r.address?.toLowerCase().includes(search) || r.city?.toLowerCase().includes(search));
    }
 
-   /* suosikit — tullee myöhemmin kun kirjautuminen on valmis */
-   /* if (activeFilters.favourites) {
-    filtered = filtered.filter(r => r._id === userFavouriteId);
-  } */
+   // Suosikkifiltteri
+   if (activeFilters.favourite) {
+      if (currentFavouriteId) {
+         filtered = filtered.filter((r) => r._id === currentFavouriteId);
+      } else {
+         filtered = []; // Ei suosikkia, näytä tyhjä lista
+      }
+   }
 
    /* render cards */
    currentFilteredRestaurants = filtered;
@@ -624,11 +730,19 @@ searchInput.addEventListener('input', (e) => {
 });
 
 /* suosikit nappi */
-document.getElementById('favourites_button').addEventListener('click', () => {
-   activeFilters.favourites = !activeFilters.favourites;
-   document.getElementById('favourites_button').classList.toggle('active', activeFilters.favourites);
-   applyFilters();
-});
+const initFavouriteFilter = () => {
+   const favButton = document.getElementById('favourites_button');
+   if (favButton) {
+      const newFavButton = favButton.cloneNode(true);
+      favButton.parentNode.replaceChild(newFavButton, favButton);
+
+      newFavButton.addEventListener('click', () => {
+         activeFilters.favourite = !activeFilters.favourite;
+         newFavButton.classList.toggle('active', activeFilters.favourite);
+         applyFilters();
+      });
+   }
+};
 
 /* generate one card by api data*/
 const createCard = async (restaurant, isClosest) => {
@@ -671,15 +785,17 @@ const createCard = async (restaurant, isClosest) => {
    `;
 
    /* favourite button */
-   card.querySelector('.card_favourite').addEventListener('click', (e) => {
-      e.currentTarget.classList.toggle('active');
+   const heartBtn = card.querySelector('.card_favourite');
+   heartBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await handleFavouriteToggle(restaurant._id, heartBtn);
    });
 
    /* show menu */
    if (hasMenu) {
       card.querySelector('.card_show_menu').addEventListener('click', async () => {
          const weeklyDays = await getWeeklyMenu(restaurant._id, currentLang);
-         openMenuModal(restaurant.name, isClosest, false, dailyCourses, weeklyDays);
+         window.openMenuModal(restaurant.name, isClosest, false, dailyCourses, weeklyDays, restaurant._id);
       });
    }
 
@@ -759,22 +875,53 @@ const menuModalName = document.getElementById('menu_modal_name');
 const menuModalClosest = document.getElementById('menu_modal_closest');
 const menuModalFavourite = document.getElementById('menu_modal_favourite');
 
-/* avaa menu modal — myöhemmin kutsutaan API-datalla */
-const openMenuModal = (restaurantName, isClosest, isFavourite, dailyCourses, weeklyDays) => {
+const initMenuModalFavourite = () => {
+   const menuFavBtn = document.getElementById('menu_modal_favourite');
+   if (menuFavBtn) {
+      const newMenuFavBtn = menuFavBtn.cloneNode(true);
+      menuFavBtn.parentNode.replaceChild(newMenuFavBtn, menuFavBtn);
+
+      newMenuFavBtn.addEventListener('click', async () => {
+         if (currentRestaurantInMenu) {
+            // Etsi sydännappi vastaavasta kortista
+            const card = document.querySelector(`.card[data-id="${currentRestaurantInMenu}"]`);
+            const heartBtn = card ? card.querySelector('.card_favourite') : null;
+
+            await handleFavouriteToggle(currentRestaurantInMenu, heartBtn);
+
+            // Päivitä menu-modalin sydän
+            if (menuModalFavourite) {
+               if (currentFavouriteId === currentRestaurantInMenu) {
+                  menuModalFavourite.classList.add('active');
+               } else {
+                  menuModalFavourite.classList.remove('active');
+               }
+            }
+         }
+      });
+   }
+};
+
+/* avaa menu modal */
+window.openMenuModal = async (restaurantName, isClosest, isFavourite, dailyCourses, weeklyDays, restaurantId) => {
+   currentRestaurantInMenu = restaurantId;
    menuModalName.textContent = restaurantName;
    menuModalClosest.style.display = isClosest ? 'inline-block' : 'none';
 
-   if (isFavourite) {
-      menuModalFavourite.classList.add('active');
-   } else {
-      menuModalFavourite.classList.remove('active');
+   // Tarkista onko tämä ravintola suosikki
+   const isFav = currentFavouriteId === restaurantId;
+   if (menuModalFavourite) {
+      // TURVALLISUUSTARKISTUS
+      if (isFav) {
+         menuModalFavourite.classList.add('active');
+      } else {
+         menuModalFavourite.classList.remove('active');
+      }
    }
 
-   // tallenna data tab-vaihtoa varten
    currentDailyData = dailyCourses;
    currentWeeklyData = weeklyDays;
 
-   // näytä päivän menu oletuksena
    document.getElementById('tab_daily').classList.add('active');
    document.getElementById('tab_weekly').classList.remove('active');
    renderDailyMenu(dailyCourses);

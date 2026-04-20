@@ -148,3 +148,66 @@ const deleteUserAccount = async () => {
       return {success: false, message: 'Verkkovirhe, yritä uudelleen'};
    }
 };
+
+// Päivitä käyttäjän suosikkiravintola
+const updateFavouriteRestaurant = async (restaurantId) => {
+   const token = getToken();
+   if (!token) return {success: false, message: 'Kirjaudu sisään asettaaksesi suosikkeja'};
+
+   try {
+      const response = await fetch(`${API_BASE_URL}/users`, {
+         method: 'PUT',
+         headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+         },
+         body: JSON.stringify({favouriteRestaurant: restaurantId}),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+         return {success: false, message: data.message || 'Suosikin päivitys epäonnistui'};
+      }
+
+      return {success: true, user: data};
+   } catch (error) {
+      console.error('Error updating favourite:', error);
+      return {success: false, message: 'Verkkovirhe, yritä uudelleen'};
+   }
+};
+
+// Poista suosikki (laita null)
+const removeFavouriteRestaurant = async () => {
+   const token = getToken();
+   if (!token) return {success: false, message: 'Kirjaudu sisään'};
+
+   try {
+      const response = await fetch(`${API_BASE_URL}/users`, {
+         method: 'PUT',
+         headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+         },
+         body: JSON.stringify({favouriteRestaurant: null}),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+         return {success: false, message: data.message || 'Suosikin poisto epäonnistui'};
+      }
+
+      return {success: true, user: data};
+   } catch (error) {
+      console.error('Error removing favourite:', error);
+      return {success: false, message: 'Verkkovirhe, yritä uudelleen'};
+   }
+};
+
+// Hae käyttäjän nykyinen suosikki
+const getUserFavourite = async () => {
+   const user = await getUserProfile();
+   if (!user) return null;
+   return user.favouriteRestaurant || null;
+};
