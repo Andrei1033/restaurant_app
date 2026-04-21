@@ -14,20 +14,19 @@ langBtns.forEach((btn) => {
    btn.addEventListener('click', () => {
       langBtns.forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
-      const lang = btn.dataset.lang;
-      console.log('Kieli vaihdettu:', lang);
-      // myöhemmin tähän API-kutsu oikealla kielellä
+      currentLang = btn.dataset.lang;
+      applyLanguage();
    });
 });
 
-/* päivitä header kirjautumisen mukaan */
+/* update header based on login state */
 const updateHeaderUI = (user) => {
    const loginButtons = document.getElementById('login_buttons');
    const userProfile = document.getElementById('user_profile');
    const headerAvatar = document.getElementById('header_avatar');
 
    if (user) {
-      /* kirjautunut — piilota napit, näytä profiili */
+      /* logged in — hide buttons, show profile */
       loginButtons.style.display = 'none';
       userProfile.style.display = 'block';
 
@@ -37,38 +36,38 @@ const updateHeaderUI = (user) => {
          headerAvatar.src = '../assets/tremplate_profile.jpg';
       }
    } else {
-      /* ei kirjautunut — näytä napit, piilota profiili */
+      /* not logged in — show buttons, hide profile */
       loginButtons.style.display = 'block';
       userProfile.style.display = 'none';
    }
 };
 
-/* kirjautuminen */
+/* login handler */
 document.getElementById('login_submit').addEventListener('click', async () => {
    const username = document.getElementById('login_username').value;
    const password = document.getElementById('login_password').value;
    const errorEl = document.getElementById('login_error');
 
    if (!username || !password) {
-      errorEl.textContent = 'Täytä kaikki kentät';
+      errorEl.textContent = t('errFillAll');
       return;
    }
 
-   /* muuta nappi ladaustilaan */
+   /* set button to loading state */
    const submitButton = document.getElementById('login_submit');
-   submitButton.textContent = 'Ladataan...';
+   submitButton.textContent = t('loading');
    submitButton.disabled = true;
 
    const result = await login(username, password);
 
-   submitButton.textContent = 'Kirjaudu';
+   submitButton.textContent = t('loginSubmit');
    submitButton.disabled = false;
 
    if (result.success) {
       updateHeaderUI(result.user);
       closeModal('login');
       errorEl.textContent = '';
-      /* tyhjää kentät */
+      /* clear inputs */
       document.getElementById('login_username').value = '';
       document.getElementById('login_password').value = '';
    } else {
@@ -76,24 +75,24 @@ document.getElementById('login_submit').addEventListener('click', async () => {
    }
 });
 
-// Täytä profiilimodaalin kentät
+// Populate profile modal fields
 const populateProfileModal = async () => {
    const user = await getUserProfile();
    if (!user) return;
 
-   // Aseta placeholderit tuoreilla tiedoilla
-   document.getElementById('profile_username').placeholder = user.username || 'Käyttäjänimi';
-   document.getElementById('profile_email').placeholder = user.email || 'Sähköposti';
-   document.getElementById('profile_password').placeholder = 'Jätä tyhjäksi jos ei muutosta';
+   // Set placeholders with latest user data
+   document.getElementById('profile_username').placeholder = user.username || t('profileUsername');
+   document.getElementById('profile_email').placeholder = user.email || t('profileEmail');
+   document.getElementById('profile_password').placeholder = t('profilePasswordPlaceholder');
 
-   // Tyhjennä input-kentät (ettei vanhat arvot jää näkymään)
+   // Clear input fields (prevent stale values)
    document.getElementById('profile_username').value = '';
    document.getElementById('profile_email').value = '';
    document.getElementById('profile_password').value = '';
 
-   // Päivitä profiilikuva modaaliin - HAETAAN PALVELIMELTA
+   // Update profile image in modal (fetched from server)
    if (user.avatar) {
-      // Lisää aikaleima estämään välimuistiongelmat
+      // Add timestamp to avoid cache issues
       const avatarUrl = `https://media2.edu.metropolia.fi/restaurant/uploads/${user.avatar}?t=${Date.now()}`;
       document.getElementById('profile_avatar_preview').src = avatarUrl;
    } else {
@@ -101,7 +100,7 @@ const populateProfileModal = async () => {
    }
 };
 
-// Käsittele profiilin päivitys
+// Handle profile update
 const handleAvatarUpload = async (file) => {
    if (!file) return;
 
@@ -109,7 +108,7 @@ const handleAvatarUpload = async (file) => {
    if (!allowedTypes.includes(file.type)) {
       const errorEl = document.getElementById('profile_error');
       errorEl.style.color = '#f44336';
-      errorEl.textContent = 'Vain kuvatiedostot (JPEG, PNG, GIF) ovat sallittuja';
+      errorEl.textContent = 'Only image files (JPEG, PNG, GIF) are allowed';
       setTimeout(() => {
          errorEl.textContent = '';
          errorEl.style.color = '';
@@ -120,7 +119,7 @@ const handleAvatarUpload = async (file) => {
    if (file.size > 5 * 1024 * 1024) {
       const errorEl = document.getElementById('profile_error');
       errorEl.style.color = '#f44336';
-      errorEl.textContent = 'Kuvan maksimikoko on 5MB';
+      errorEl.textContent = 'Maximum image size is 5MB';
       setTimeout(() => {
          errorEl.textContent = '';
          errorEl.style.color = '';
@@ -128,7 +127,7 @@ const handleAvatarUpload = async (file) => {
       return;
    }
 
-   // Näytä esikatselu heti
+   // Show preview immediately
    const reader = new FileReader();
    reader.onload = (e) => {
       document.getElementById('profile_avatar_preview').src = e.target.result;
@@ -138,13 +137,13 @@ const handleAvatarUpload = async (file) => {
    const result = await uploadAvatar(file);
 
    if (result.success) {
-      // Hae tuoreet käyttäjätiedot palvelimelta
+      // Fetch fresh user data from server
       const updatedUser = await getUserProfile();
       if (updatedUser) {
-         // Päivitä header
+         // Update header
          updateHeaderUI(updatedUser);
 
-         // Päivitä modaalin placeholderit (jos nimi/email on muuttunut)
+         // Update modal placeholders (if name/email changed)
          if (updatedUser.username) {
             document.getElementById('profile_username').placeholder = updatedUser.username;
          }
@@ -152,7 +151,7 @@ const handleAvatarUpload = async (file) => {
             document.getElementById('profile_email').placeholder = updatedUser.email;
          }
 
-         // Päivitä profiilikuva uudelleen varmuuden vuoksi
+         // Update profile image again to be safe
          if (updatedUser.avatar) {
             const avatarUrl = `https://media2.edu.metropolia.fi/restaurant/uploads/${updatedUser.avatar}?t=${Date.now()}`;
             document.getElementById('profile_avatar_preview').src = avatarUrl;
@@ -161,7 +160,7 @@ const handleAvatarUpload = async (file) => {
 
       const errorEl = document.getElementById('profile_error');
       errorEl.style.color = '#4caf50';
-      errorEl.textContent = 'Profiilikuva päivitetty!';
+      errorEl.textContent = t('notifAvatarUpdated');
       setTimeout(() => {
          errorEl.textContent = '';
          errorEl.style.color = '';
@@ -177,21 +176,21 @@ const handleAvatarUpload = async (file) => {
    }
 };
 
-// Käsittele profiilikuvan lataus
+// Handle profile image upload
 const handleProfileUpdate = async () => {
    const usernameInput = document.getElementById('profile_username');
    const emailInput = document.getElementById('profile_email');
    const passwordInput = document.getElementById('profile_password');
    const errorEl = document.getElementById('profile_error');
 
-   // Tyhjennä vanha virhe
+   // Clear previous error
    errorEl.textContent = '';
    errorEl.style.color = '#f44336';
 
    const updatedData = {};
    const errors = [];
 
-   // Tarkista käyttäjänimi (jos yritetään vaihtaa)
+   // Validate username (if changing)
    if (usernameInput.value.trim()) {
       const newUsername = usernameInput.value.trim();
       if (newUsername.length < 3) {
@@ -205,7 +204,7 @@ const handleProfileUpdate = async () => {
       }
    }
 
-   // Tarkista sähköposti (jos yritetään vaihtaa)
+   // Validate email (if changing)
    if (emailInput.value.trim()) {
       const newEmail = emailInput.value.trim();
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -216,7 +215,7 @@ const handleProfileUpdate = async () => {
       }
    }
 
-   // Tarkista salasana (jos yritetään vaihtaa)
+   // Validate password (if changing)
    if (passwordInput.value.trim()) {
       const newPassword = passwordInput.value.trim();
       if (newPassword.length < 6) {
@@ -228,15 +227,15 @@ const handleProfileUpdate = async () => {
       }
    }
 
-   // Näytä validaatiovirheet
+   // Show validation errors
    if (errors.length > 0) {
       errorEl.textContent = errors.join('. ');
       return;
    }
 
-   // Jos ei mitään päivitettävää
+   // If nothing to update
    if (Object.keys(updatedData).length === 0) {
-      errorEl.textContent = 'Ei muutoksia päivitettäväksi';
+      errorEl.textContent = t('noChanges');
       setTimeout(() => {
          errorEl.textContent = '';
       }, 3000);
@@ -245,7 +244,7 @@ const handleProfileUpdate = async () => {
 
    const submitButton = document.getElementById('profile_submit');
    const originalButtonText = submitButton.textContent;
-   submitButton.textContent = 'Tallennetaan...';
+   submitButton.textContent = t('saving');
    submitButton.disabled = true;
 
    const result = await updateUserProfile(updatedData);
@@ -254,34 +253,34 @@ const handleProfileUpdate = async () => {
    submitButton.disabled = false;
 
    if (result.success) {
-      // Hae tuoreet käyttäjätiedot palvelimelta
+      // Fetch fresh user data from server
       const updatedUser = await getUserProfile();
       if (updatedUser) {
          updateHeaderUI(updatedUser);
 
-         // Päivitä placeholderit uusilla tiedoilla
-         document.getElementById('profile_username').placeholder = updatedUser.username || 'Käyttäjänimi';
-         document.getElementById('profile_email').placeholder = updatedUser.email || 'Sähköposti';
+         // Update placeholders with new data
+         document.getElementById('profile_username').placeholder = updatedUser.username || t('profileUsername');
+         document.getElementById('profile_email').placeholder = updatedUser.email || t('profileEmail');
 
-         // Päivitä profiilikuva
+         // Update profile image
          if (updatedUser.avatar) {
             const avatarUrl = `https://media2.edu.metropolia.fi/restaurant/uploads/${updatedUser.avatar}?t=${Date.now()}`;
             document.getElementById('profile_avatar_preview').src = avatarUrl;
          }
       }
 
-      // Tyhjennä input-kentät
+      // Clear input fields
       usernameInput.value = '';
       emailInput.value = '';
       passwordInput.value = '';
 
       errorEl.style.color = '#4caf50';
-      errorEl.textContent = 'Profiili päivitetty onnistuneesti!';
+      errorEl.textContent = t('notifProfileUpdated');
       setTimeout(() => {
          errorEl.textContent = '';
       }, 3000);
    } else {
-      // Käsittele backend-virheet käyttäjäystävällisesti
+      // Handle backend errors in a user-friendly way
       let errorMessage = '';
 
       if (result.message.includes('E11000') || result.message.includes('duplicate key')) {
@@ -321,7 +320,7 @@ const initProfileModal = () => {
          if (e.target.files && e.target.files[0]) {
             handleAvatarUpload(e.target.files[0]);
          }
-         // Tyhjennä input, jotta sama tiedosto voidaan valita uudelleen
+         // Clear the input so the same file can be selected again
          e.target.value = '';
       });
    }
@@ -352,12 +351,12 @@ const initProfileModal = () => {
       newLogoutBtn.addEventListener('click', () => {
          logout();
          closeModal('profile');
-         // Tyhjennä kentät
+         // Clear fields
          document.getElementById('profile_username').value = '';
          document.getElementById('profile_email').value = '';
          document.getElementById('profile_password').value = '';
-         document.getElementById('profile_username').placeholder = 'Käyttäjänimi';
-         document.getElementById('profile_email').placeholder = 'Sähköposti';
+         document.getElementById('profile_username').placeholder = t('profileUsername');
+         document.getElementById('profile_email').placeholder = t('profileEmail');
          document.getElementById('profile_avatar_preview').src = '../assets/tremplate_profile.jpg';
       });
    }
@@ -381,11 +380,11 @@ const createConfirmModal = () => {
    const confirmModalHTML = `
       <div id="confirm_modal" class="modal-overlay">
          <div class="modal confirm-modal">
-            <h3>Vahvista tilin poisto</h3>
-            <p>Oletko varma että haluat poistaa tilisi?<br>Tätä toimintoa ei voi peruuttaa.</p>
+            <h3>${t('confirmDeleteTitle')}</h3>
+            <p>${t('confirmDeleteText')}</p>
             <div class="modal-footer">
-               <button id="confirm_cancel_btn">Peruuta</button>
-               <button id="confirm_delete_btn" class="delete-account-btn">Poista tili</button>
+               <button id="confirm_cancel_btn">${t('confirmCancel')}</button>
+               <button id="confirm_delete_btn" class="delete-account-btn">${t('confirmDeleteBtn')}</button>
             </div>
          </div>
       </div>
@@ -393,7 +392,7 @@ const createConfirmModal = () => {
 
    document.body.insertAdjacentHTML('beforeend', confirmModalHTML);
 
-   // Lisää tyylit vahvistusmodaalille
+   // Add styles for confirmation modal
    const style = document.createElement('style');
    style.textContent = `
       .confirm-modal {
@@ -420,13 +419,13 @@ const createConfirmModal = () => {
    document.head.appendChild(style);
 };
 
-// Käsittele tilin poisto
+// Handle account deletion
 const handleDeleteAccount = async () => {
    const confirmModal = document.getElementById('confirm_modal');
    const cancelBtn = document.getElementById('confirm_cancel_btn');
    const deleteBtn = document.getElementById('confirm_delete_btn');
 
-   // Näytä vahvistusmodaali
+   // Show confirmation modal
    confirmModal.classList.add('active');
 
    // Poista vanhat listenerit
@@ -443,9 +442,9 @@ const handleDeleteAccount = async () => {
 
    // Vahvista poisto
    newDeleteBtn.addEventListener('click', async () => {
-      // Poista vanha teksti ja disabloi nappi
+      // Remove old text and disable button
       const originalText = newDeleteBtn.textContent;
-      newDeleteBtn.textContent = 'Poistetaan...';
+      newDeleteBtn.textContent = t('loading');
       newDeleteBtn.disabled = true;
 
       const result = await deleteUserAccount();
@@ -455,13 +454,13 @@ const handleDeleteAccount = async () => {
          confirmModal.classList.remove('active');
          closeModal('profile');
 
-         // Näytä onnistumisviesti (voit luoda pienen ilmoituksen)
-         showNotification('Tilisi on poistettu onnistuneesti', 'success');
+         // Show success notification
+         showNotification(t('notifAccountDeleted'), 'success');
 
-         // Päivitä header (näytetään kirjautumisnapot)
+         // Update header (show login buttons)
          updateHeaderUI(null);
 
-         // Ohjaa etusivulle tai päivitä näkymä
+         // Redirect to home or refresh view
          setTimeout(() => {
             window.location.reload();
          }, 2000);
@@ -469,7 +468,7 @@ const handleDeleteAccount = async () => {
          newDeleteBtn.textContent = originalText;
          newDeleteBtn.disabled = false;
 
-         // Näytä virheilmoitus
+         // Show error notification
          showNotification(result.message, 'error');
          confirmModal.classList.remove('active');
       }
@@ -508,7 +507,7 @@ const showNotification = (message, type = 'success') => {
 
    document.body.appendChild(notification);
 
-   // Lisää animaatio
+   // Add animation
    if (!document.querySelector('#notification-style')) {
       const style = document.createElement('style');
       style.id = 'notification-style';
@@ -584,7 +583,7 @@ const updateAllHeartButtons = () => {
 const handleFavouriteToggle = async (restaurantId, heartButton) => {
    const token = getToken();
    if (!token) {
-      showNotification('Kirjaudu sisään asettaaksesi suosikkeja', 'error');
+      showNotification(t('notifLoginRequired'), 'error');
       openModal('login');
       return false;
    }
@@ -600,7 +599,7 @@ const handleFavouriteToggle = async (restaurantId, heartButton) => {
          if (heartButton) heartButton.classList.remove('active');
          // Synkronoi kaikki sydämet (kortit + modal)
          updateAllHeartButtons();
-         showNotification('Suosikki poistettu', 'success');
+         showNotification(t('notifFavRemoved'), 'success');
 
          // Jos suosikkifiltteri on päällä, päivitä näkymä
          if (activeFilters.favourite) {
@@ -620,7 +619,7 @@ const handleFavouriteToggle = async (restaurantId, heartButton) => {
          // Päivitä kaikki sydännapit (poista active muualta)
          updateAllHeartButtons();
 
-         showNotification('Suosikki asetettu', 'success');
+         showNotification(t('notifFavAdded'), 'success');
 
          // Jos suosikkifiltteri on päällä, päivitä näkymä
          if (activeFilters.favourite) {
@@ -777,13 +776,10 @@ const createCard = async (restaurant, isClosest) => {
          </div>
       </div>
       <div class="lower_card">
-         ${!hasMenu ? '<p class="empty_menu">Valikko ei ole saatavissa</p>' : ''}
-         <button class="card_show_menu ${!hasMenu ? 'card_show_menu_empty' : ''}"
-         ${!hasMenu ? 'style="display:none"' : ''}>
-         Näytä valikko
-         </button>
-         <button class="card_show_map">Näytä kartta</button>
-      </div>
+      ${!hasMenu ? `<p class="empty_menu">${t('noMenu')}</p>` : ''}
+      <button class="card_show_menu ...">${t('showMenu')}</button>
+      <button class="card_show_map">${t('showMap')}</button>
+      ${isClosest ? `<span class="closest_indicator">${t('closest')}</span>` : ''}
    `;
 
    /* favourite button */
@@ -962,7 +958,7 @@ let currentWeeklyData = [];
 
 const renderDailyMenu = (courses) => {
    if (!courses || !Array.isArray(courses) || courses.length === 0) {
-      menuModalBody.innerHTML = '<p class="menu-empty">Ei menua tänään</p>';
+      menuModalBody.innerHTML = '<p class="menu-empty">' + t('noDaily') + '</p>';
       return;
    }
 
@@ -1031,7 +1027,7 @@ document.getElementById('menu_show_map').addEventListener('click', () => {
 /* rendre weekly menu */
 const renderWeeklyMenu = (days) => {
    if (!days || days.length === 0) {
-      menuModalBody.innerHTML = '<p class="menu-empty">Ei viikon menua saatavilla</p>';
+      menuModalBody.innerHTML = '<p class="menu-empty">' + t('noWeekly') + '</p>';
       return;
    }
 
@@ -1070,7 +1066,7 @@ const renderCards = async (restaurants, closestIdx = -1) => {
    if (!container) return;
 
    if (!restaurants || restaurants.length === 0) {
-      container.innerHTML = '<p class="no-restaurants">Ei ravintoloita saatavilla</p>';
+      container.innerHTML = `<p class="no-restaurants">${t('noRestaurants')}</p>`;
       return;
    }
 

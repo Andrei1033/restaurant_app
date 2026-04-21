@@ -20,6 +20,9 @@ const init = async () => {
    initFavouriteFilter();
    initMenuModalFavourite();
 
+   // Apply language to static UI elements
+   if (typeof applyLanguage === 'function') applyLanguage();
+
    // Lataa käyttäjän suosikki
    await loadUserFavourite();
 
@@ -73,7 +76,7 @@ const populateFilters = (restaurants) => {
    /* kaupungit */
    const cities = [...new Set(restaurants.map((r) => r.city).filter(Boolean))].sort();
    const cityItems = document.querySelector('#city_select .select-items');
-   cityItems.innerHTML = '<div data-value="">Kaikki kaupungit</div>';
+   cityItems.innerHTML = `<div data-value="">${t('allCities')}</div>`;
    cities.forEach((city) => {
       const div = document.createElement('div');
       div.dataset.value = city;
@@ -84,7 +87,7 @@ const populateFilters = (restaurants) => {
    /* yhtiöt */
    const companies = [...new Set(restaurants.map((r) => r.company).filter(Boolean))].sort();
    const companyItems = document.querySelector('#company_select .select-items');
-   companyItems.innerHTML = '<div data-value="">Kaikki yhtiöt</div>';
+   companyItems.innerHTML = `<div data-value="">${t('allCompanies')}</div>`;
    companies.forEach((company) => {
       const div = document.createElement('div');
       div.dataset.value = company;

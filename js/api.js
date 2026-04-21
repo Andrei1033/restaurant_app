@@ -36,7 +36,7 @@ const getWeeklyMenu = async (id, lang = 'fi') => {
    }
 };
 
-// Hae käyttäjän profiilitiedot
+// Fetch user profile
 const getUserProfile = async () => {
    const token = getToken();
    if (!token) return null;
@@ -56,7 +56,7 @@ const getUserProfile = async () => {
    }
 };
 
-// Päivitä käyttäjän tiedot
+// Update user profile
 const updateUserProfile = async (userData) => {
    const token = getToken();
    if (!token) return {success: false, message: 'Ei kirjautumistokenia'};
@@ -74,10 +74,10 @@ const updateUserProfile = async (userData) => {
       const data = await response.json();
 
       if (!response.ok) {
-         // Palautetaan backendin virheviesti tai luodaan oma
-         let errorMessage = data.message || 'Päivitys epäonnistui';
+         // Return backend error message or a generic one
+         let errorMessage = data.message || 'Update failed';
 
-         // Jos backend palauttaa MongoDB:n duplicate key virheen
+         // If backend returns MongoDB duplicate key error, keep the message
          if (data.message && data.message.includes('E11000')) {
             errorMessage = data.message;
          }
@@ -88,14 +88,14 @@ const updateUserProfile = async (userData) => {
       return {success: true, user: data};
    } catch (error) {
       console.error('Error updating profile:', error);
-      return {success: false, message: 'Verkkovirhe, yritä uudelleen'};
+      return {success: false, message: 'Network error, please try again'};
    }
 };
 
-// Lataa profiilikuva
+// Upload avatar
 const uploadAvatar = async (file) => {
    const token = getToken();
-   if (!token) return {success: false, message: 'Ei kirjautumistokenia'};
+   if (!token) return {success: false, message: 'No auth token'};
 
    const formData = new FormData();
    formData.append('avatar', file);
@@ -111,19 +111,19 @@ const uploadAvatar = async (file) => {
 
       const data = await response.json();
       if (!response.ok) {
-         return {success: false, message: data.message || 'Kuvan lataus epäonnistui'};
+         return {success: false, message: data.message || 'Avatar upload failed'};
       }
       return {success: true, avatarUrl: data.avatar};
    } catch (error) {
       console.error('Error uploading avatar:', error);
-      return {success: false, message: 'Verkkovirhe, yritä uudelleen'};
+      return {success: false, message: 'Network error, please try again'};
    }
 };
 
-// Poista käyttäjätili
+// Delete user account
 const deleteUserAccount = async () => {
    const token = getToken();
-   if (!token) return {success: false, message: 'Ei kirjautumistokenia'};
+   if (!token) return {success: false, message: 'No auth token'};
 
    try {
       const response = await fetch(`${API_BASE_URL}/users`, {
@@ -135,24 +135,24 @@ const deleteUserAccount = async () => {
 
       if (!response.ok) {
          const data = await response.json();
-         return {success: false, message: data.message || 'Tilin poisto epäonnistui'};
+         return {success: false, message: data.message || 'Account deletion failed'};
       }
 
       // Poista token ja tee logout
       removeToken();
       updateHeaderUI(null);
 
-      return {success: true, message: 'Tili poistettu onnistuneesti'};
+      return {success: true, message: 'Account deleted successfully'};
    } catch (error) {
       console.error('Error deleting account:', error);
-      return {success: false, message: 'Verkkovirhe, yritä uudelleen'};
+      return {success: false, message: 'Network error, please try again'};
    }
 };
 
-// Päivitä käyttäjän suosikkiravintola
+// Update user's favourite restaurant
 const updateFavouriteRestaurant = async (restaurantId) => {
    const token = getToken();
-   if (!token) return {success: false, message: 'Kirjaudu sisään asettaaksesi suosikkeja'};
+   if (!token) return {success: false, message: 'Login required to set favourites'};
 
    try {
       const response = await fetch(`${API_BASE_URL}/users`, {
@@ -167,20 +167,20 @@ const updateFavouriteRestaurant = async (restaurantId) => {
       const data = await response.json();
 
       if (!response.ok) {
-         return {success: false, message: data.message || 'Suosikin päivitys epäonnistui'};
+         return {success: false, message: data.message || 'Failed to update favourite'};
       }
 
       return {success: true, user: data};
    } catch (error) {
       console.error('Error updating favourite:', error);
-      return {success: false, message: 'Verkkovirhe, yritä uudelleen'};
+      return {success: false, message: 'Network error, please try again'};
    }
 };
 
-// Poista suosikki (laita null)
+// Remove favourite (set to null)
 const removeFavouriteRestaurant = async () => {
    const token = getToken();
-   if (!token) return {success: false, message: 'Kirjaudu sisään'};
+   if (!token) return {success: false, message: 'Login required'};
 
    try {
       const response = await fetch(`${API_BASE_URL}/users`, {
@@ -195,17 +195,17 @@ const removeFavouriteRestaurant = async () => {
       const data = await response.json();
 
       if (!response.ok) {
-         return {success: false, message: data.message || 'Suosikin poisto epäonnistui'};
+         return {success: false, message: data.message || 'Failed to remove favourite'};
       }
 
       return {success: true, user: data};
    } catch (error) {
       console.error('Error removing favourite:', error);
-      return {success: false, message: 'Verkkovirhe, yritä uudelleen'};
+      return {success: false, message: 'Network error, please try again'};
    }
 };
 
-// Hae käyttäjän nykyinen suosikki
+// Fetch user's current favourite
 const getUserFavourite = async () => {
    const user = await getUserProfile();
    if (!user) return null;

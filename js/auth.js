@@ -1,19 +1,19 @@
-//tallenna token
+// save token
 const saveToken = (token) => {
    localStorage.setItem('token', token);
 };
 
-// hae token
+// get token
 const getToken = () => {
    return localStorage.getItem('token');
 };
 
-// poista token
+// remove token
 const removeToken = () => {
    localStorage.removeItem('token');
 };
 
-// tarkista token ja hae käyttäjän tiedot
+// check token and fetch user details
 const checkToken = async () => {
    const token = getToken();
    if (!token) return null;
@@ -37,7 +37,7 @@ const checkToken = async () => {
    }
 };
 
-// kirjaudu sisään
+// login
 // Accept either username or email from the UI (identifier)
 const login = async (identifier, password) => {
    try {
@@ -53,7 +53,7 @@ const login = async (identifier, password) => {
       const data = await response.json();
 
       if (!response.ok) {
-         return {success: false, message: data.message || 'Kirjautuminen epäonnistui'};
+         return {success: false, message: data.message || t('errLoginFailed')};
       }
 
       // Support multiple possible response shapes
@@ -65,7 +65,7 @@ const login = async (identifier, password) => {
       return {success: true, user};
    } catch (error) {
       console.error('Error logging in:', error);
-      return {success: false, message: 'Kirjautuminen epäonnistui'};
+      return {success: false, message: t('errLoginFailed')};
    }
 };
 
@@ -74,8 +74,8 @@ window.login = async (identifier, password) => {
    const result = await originalLogin(identifier, password);
    if (result.success && result.user) {
       updateHeaderUI(result.user);
-      await loadUserFavourite(); // Lataa suosikki kirjautumisen jälkeen
-      applyFilters(); // Päivitä näkymä
+      await loadUserFavourite(); // Load favourite after login
+      applyFilters(); // Refresh view
    }
    return result;
 };
@@ -93,18 +93,18 @@ const register = async (username, email, password) => {
       });
 
       const data = await response.json();
-      console.log('API vastaus:', data);
+      console.log('API response:', data);
 
       if (!response.ok) {
-         return {success: false, message: data.message || 'Rekisteröinti epäonnistui'};
+         return {success: false, message: data.message || t('errRegisterFailed')};
       }
 
       // After successful registration, log the user in using the username
       const loginResult = await login(username, password);
       return loginResult;
    } catch (error) {
-      console.error('Rekisteröintivirhe:', error);
-      return {success: false, message: 'Verkkovirhe, yritä uudelleen'};
+      console.error('Registration error:', error);
+      return {success: false, message: t('errNetwork')};
    }
 };
 
@@ -115,7 +115,7 @@ document.getElementById('register_submit').addEventListener('click', async () =>
    const errorEl = document.getElementById('register_error');
 
    if (!username || !email || !password) {
-      errorEl.textContent = 'Täytä kaikki kentät';
+      errorEl.textContent = t('errFillAll');
       return;
    }
 
@@ -130,14 +130,14 @@ document.getElementById('register_submit').addEventListener('click', async () =>
    }
 });
 
-// kirjaudu ulos
+// logout
 const logout = () => {
    removeToken();
    updateHeaderUI(null);
    currentFavouriteId = null;
    updateAllHeartButtons();
 
-   // Jos suosikkifiltteri on päällä, poista se
+   // If favourite filter is active, reset it
    if (activeFilters.favourite) {
       activeFilters.favourite = false;
       const favButton = document.getElementById('favourites_button');
@@ -145,14 +145,14 @@ const logout = () => {
       applyFilters();
    }
 
-   // Sulje kaikki modaalit
+   // Close all modals
    const modals = ['login', 'register', 'profile', 'menu', 'confirm_modal'];
    modals.forEach((modal) => {
       const modalEl = document.getElementById(`${modal}_modal`);
       if (modalEl) modalEl.classList.remove('active');
    });
 
-   // Tyhjennä profiilimodaalin kentät
+   // Clear profile modal fields
    const profileUsername = document.getElementById('profile_username');
    const profileEmail = document.getElementById('profile_email');
    const profilePassword = document.getElementById('profile_password');
@@ -160,11 +160,11 @@ const logout = () => {
    if (profileEmail) profileEmail.value = '';
    if (profilePassword) profilePassword.value = '';
 
-   // Näytä notifikaatio
-   showNotification('Olet kirjautunut ulos', 'success');
+   // Show notification
+   showNotification(t('notifLoggedOut'), 'success');
 };
 
-// logout-nappi
+// logout button
 document.getElementById('logout_button').addEventListener('click', () => {
    logout();
    closeModal('profile');

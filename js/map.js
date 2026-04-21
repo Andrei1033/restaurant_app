@@ -4,7 +4,7 @@ let locationPromise = null;
 
 const defaultLocation = [60.1699, 24.9384]; // Helsinki
 
-/* laske etäisyys kahden koordinaatin välillä */
+/* calculate distance between two coordinates */
 const getDistance = (lat1, lon1, lat2, lon2) => {
    const R = 6371;
    const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -13,7 +13,7 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
-/* löydä lähin ravintola */
+/* find the closest restaurant */
 const findClosest = (restaurants, userLat, userLon) => {
    if (!Array.isArray(restaurants) || restaurants.length === 0) return -1;
 
@@ -32,7 +32,7 @@ const findClosest = (restaurants, userLat, userLon) => {
    return closestIndex;
 };
 
-/* tee marker ikonit */
+/* create marker icons */
 const normalIcon = L.divIcon({
    className: '',
    html: `<div style="
@@ -61,7 +61,7 @@ const closestIcon = L.divIcon({
    iconAnchor: [9, 9],
 });
 
-/* lisää ravintolat kartalle */
+/* add restaurants to the map */
 const addRestaurantsToMap = (restaurants, closestIndex) => {
    restaurants.forEach((restaurant, index) => {
       const [lon, lat] = restaurant.location.coordinates;
@@ -70,7 +70,7 @@ const addRestaurantsToMap = (restaurants, closestIndex) => {
 
       const marker = L.marker([lat, lon], {icon}).addTo(map);
 
-      /* popup sisältö */
+      /* popup content */
       const popupContent = `
       <div style="
         font-family: 'Open Sans', sans-serif;
@@ -85,20 +85,7 @@ const addRestaurantsToMap = (restaurants, closestIndex) => {
           margin: 0 0 4px 0;
         ">${restaurant.name}</p>
 
-        ${
-           isClosest
-              ? `<span style="
-          font-size: 11px;
-          font-weight: 600;
-          color: rgba(4, 53, 88);
-          background: rgba(4, 53, 88, 0.08);
-          padding: 2px 8px;
-          border-radius: 20px;
-          display: inline-block;
-          margin-bottom: 6px;
-        ">Lähin</span>`
-              : ''
-        }
+        ${isClosest ? `<span style="font-size: 11px; font-weight: 600; color: rgba(4, 53, 88); background: rgba(4, 53, 88, 0.08); padding: 2px 8px; border-radius: 20px; display: inline-block; margin-bottom: 6px;">${window.t('closest')}</span>` : ''}
 
         <p style="
           font-size: 12px;
@@ -120,7 +107,7 @@ const addRestaurantsToMap = (restaurants, closestIndex) => {
             cursor: pointer;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-          ">Näytä menu</button>
+          ">${window.t('popupMenuBtn')}</button>
 
           <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" style="
             flex: 1;
@@ -162,24 +149,15 @@ const addRestaurantsToMap = (restaurants, closestIndex) => {
             // Use the fresh element for attaching event listeners
             const menuBtn = newBtn;
 
-            /* tarkista onko menu saatavilla */
+            /* check if the menu is available */
             const daily = await getDailyMenu(restaurant._id, window.currentLang || 'fi');
             const weekly = await getWeeklyMenu(restaurant._id, window.currentLang || 'fi');
             const hasMenu = (daily && daily.length > 0) || (weekly && weekly.length > 0);
 
             if (!hasMenu) {
-               /* korvaa nappi varoituksella */
-               btn.outerHTML = `
-            <p style="
-               font-size: 12px;
-               color: #9a6700;
-               background: #faeeda;
-               border-radius: 6px;
-               padding: 5px 10px;
-               margin: 0;
-               flex: 1;
-               text-align: center;
-            ">Menue ei löyty</p>
+               /* replace the button with a warning */
+               menuBtn.outerHTML = `
+            <p style="font-size:12px;color:#9a6700;background:#faeeda;border-radius:6px;padding:5px 10px;margin:0;flex:1;text-align:center;">${window.t('popupNoMenu')}</p>
             `;
                return;
             }
