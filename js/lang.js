@@ -49,6 +49,7 @@ const translations = {
 
       /* profile modal */
       profileTitle: 'Profiili',
+      avatar_change_btn: 'Vaihda kuva',
       profileUsername: 'Käyttäjänimi',
       profileEmail: 'Sähköposti',
       profilePassword: 'Uusi salasana',
@@ -140,6 +141,7 @@ const translations = {
 
       /* profile modal */
       profileTitle: 'Profile',
+      avatar_change_btn: 'Change photo',
       profileUsername: 'Username',
       profileEmail: 'Email',
       profilePassword: 'New password',
@@ -235,6 +237,7 @@ const applyLanguage = () => {
 
    /* profile modal */
    document.querySelector('#profile_modal h2').textContent = t('profileTitle');
+   document.querySelector('.avatar-upload-btn').textContent = t('avatar_change_btn');
    document.querySelector('label[for="profile_username"]').textContent = t('profileUsername');
    document.querySelector('label[for="profile_email"]').textContent = t('profileEmail');
    document.querySelector('label[for="profile_password"]').textContent = t('profilePassword');

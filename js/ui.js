@@ -28,7 +28,7 @@ const updateHeaderUI = (user) => {
    if (user) {
       /* logged in — hide buttons, show profile */
       loginButtons.style.display = 'none';
-      userProfile.style.display = 'block';
+      userProfile.style.display = 'flex';
 
       if (user.avatar) {
          headerAvatar.src = `https://media2.edu.metropolia.fi/restaurant/uploads/${user.avatar}`;
@@ -37,7 +37,7 @@ const updateHeaderUI = (user) => {
       }
    } else {
       /* not logged in — show buttons, hide profile */
-      loginButtons.style.display = 'block';
+      loginButtons.style.display = 'flex';
       userProfile.style.display = 'none';
    }
 };
@@ -767,7 +767,7 @@ const createCard = async (restaurant, isClosest) => {
          <p>${restaurant.city} | ${restaurant.company}</p>
          </div>
          <div class="card_indicators">
-         ${isClosest ? '<span class="closest_indicator" id="closest_indicator">Lähin</span>' : ''}
+         ${isClosest ? `<span class="closest_indicator" id="closest_indicator">${t('closest')}</span>` : ''}
          <button class="card_favourite" aria-label="Lisää suosikkeihin">
             <svg class="heart-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -777,9 +777,9 @@ const createCard = async (restaurant, isClosest) => {
       </div>
       <div class="lower_card">
       ${!hasMenu ? `<p class="empty_menu">${t('noMenu')}</p>` : ''}
-      <button class="card_show_menu ...">${t('showMenu')}</button>
+      ${hasMenu ? `<button class="card_show_menu">${t('showMenu')}</button>` : ''}
       <button class="card_show_map">${t('showMap')}</button>
-      ${isClosest ? `<span class="closest_indicator">${t('closest')}</span>` : ''}
+
    `;
 
    /* favourite button */
