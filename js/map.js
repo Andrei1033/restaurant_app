@@ -6,38 +6,36 @@ const defaultLocation = [60.1699, 24.9384]; // Helsinki
 
 /* laske etäisyys kahden koordinaatin välillä */
 const getDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+   const R = 6371;
+   const dLat = ((lat2 - lat1) * Math.PI) / 180;
+   const dLon = ((lon2 - lon1) * Math.PI) / 180;
+   const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
 /* löydä lähin ravintola */
 const findClosest = (restaurants, userLat, userLon) => {
-  if (!Array.isArray(restaurants) || restaurants.length === 0) return -1;
+   if (!Array.isArray(restaurants) || restaurants.length === 0) return -1;
 
-  let closestIndex = 0;
-  let closestDistance = Infinity;
+   let closestIndex = 0;
+   let closestDistance = Infinity;
 
-  restaurants.forEach((restaurant, index) => {
-    const [lon, lat] = restaurant.location.coordinates;
-    const distance = getDistance(userLat, userLon, lat, lon);
-    if (distance < closestDistance) {
-      closestDistance = distance;
-      closestIndex = index;
-    }
-  });
+   restaurants.forEach((restaurant, index) => {
+      const [lon, lat] = restaurant.location.coordinates;
+      const distance = getDistance(userLat, userLon, lat, lon);
+      if (distance < closestDistance) {
+         closestDistance = distance;
+         closestIndex = index;
+      }
+   });
 
-  return closestIndex;
+   return closestIndex;
 };
 
 /* tee marker ikonit */
 const normalIcon = L.divIcon({
-  className: '',
-  html: `<div style="
+   className: '',
+   html: `<div style="
     width: 14px;
     height: 14px;
     background: rgba(4, 53, 88);
@@ -45,13 +43,13 @@ const normalIcon = L.divIcon({
     border-radius: 50%;
     box-shadow: 0 2px 6px rgba(0,0,0,0.3);
   "></div>`,
-  iconSize: [14, 14],
-  iconAnchor: [7, 7]
+   iconSize: [14, 14],
+   iconAnchor: [7, 7],
 });
 
 const closestIcon = L.divIcon({
-  className: '',
-  html: `<div style="
+   className: '',
+   html: `<div style="
     width: 18px;
     height: 18px;
     background: #e24b4a;
@@ -59,21 +57,21 @@ const closestIcon = L.divIcon({
     border-radius: 50%;
     box-shadow: 0 2px 8px rgba(226,75,74,0.5);
   "></div>`,
-  iconSize: [18, 18],
-  iconAnchor: [9, 9]
+   iconSize: [18, 18],
+   iconAnchor: [9, 9],
 });
 
 /* lisää ravintolat kartalle */
 const addRestaurantsToMap = (restaurants, closestIndex) => {
-  restaurants.forEach((restaurant, index) => {
-    const [lon, lat] = restaurant.location.coordinates;
-    const isClosest = index === closestIndex;
-    const icon = isClosest ? closestIcon : normalIcon;
+   restaurants.forEach((restaurant, index) => {
+      const [lon, lat] = restaurant.location.coordinates;
+      const isClosest = index === closestIndex;
+      const icon = isClosest ? closestIcon : normalIcon;
 
-    const marker = L.marker([lat, lon], { icon }).addTo(map);
+      const marker = L.marker([lat, lon], {icon}).addTo(map);
 
-    /* popup sisältö */
-    const popupContent = `
+      /* popup sisältö */
+      const popupContent = `
       <div style="
         font-family: 'Open Sans', sans-serif;
         min-width: 200px;
@@ -87,7 +85,9 @@ const addRestaurantsToMap = (restaurants, closestIndex) => {
           margin: 0 0 4px 0;
         ">${restaurant.name}</p>
 
-        ${isClosest ? `<span style="
+        ${
+           isClosest
+              ? `<span style="
           font-size: 11px;
           font-weight: 600;
           color: rgba(4, 53, 88);
@@ -96,7 +96,9 @@ const addRestaurantsToMap = (restaurants, closestIndex) => {
           border-radius: 20px;
           display: inline-block;
           margin-bottom: 6px;
-        ">Lähin</span>` : ''}
+        ">Lähin</span>`
+              : ''
+        }
 
         <p style="
           font-size: 12px;
@@ -140,27 +142,34 @@ const addRestaurantsToMap = (restaurants, closestIndex) => {
       </div>
     `;
 
-    marker.bindPopup(popupContent, {
-      maxWidth: 260,
-      closeButton: false
-    });
+      marker.bindPopup(popupContent, {
+         maxWidth: 260,
+         closeButton: false,
+      });
 
-   /* attach async menu loader when popup opens */
+      /* attach async menu loader when popup opens */
       marker.on('popupopen', async (e) => {
-      try {
-         const popupEl = e.popup.getElement();
-         if (!popupEl) return;
-         const btn = popupEl.querySelector('.open-menu-btn');
-         if (!btn) return;
+         try {
+            const popupEl = e.popup.getElement();
+            if (!popupEl) return;
+            const btn = popupEl.querySelector('.open-menu-btn');
+            if (!btn) return;
 
-         /* tarkista onko menu saatavilla */
-         const daily = await getDailyMenu(restaurant._id, window.currentLang || 'fi');
-         const weekly = await getWeeklyMenu(restaurant._id, window.currentLang || 'fi');
-         const hasMenu = (daily && daily.length > 0) || (weekly && weekly.length > 0);
+            // Replace the button with a clean clone to remove any previously attached listeners
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
 
-         if (!hasMenu) {
-            /* korvaa nappi varoituksella */
-            btn.outerHTML = `
+            // Use the fresh element for attaching event listeners
+            const menuBtn = newBtn;
+
+            /* tarkista onko menu saatavilla */
+            const daily = await getDailyMenu(restaurant._id, window.currentLang || 'fi');
+            const weekly = await getWeeklyMenu(restaurant._id, window.currentLang || 'fi');
+            const hasMenu = (daily && daily.length > 0) || (weekly && weekly.length > 0);
+
+            if (!hasMenu) {
+               /* korvaa nappi varoituksella */
+               btn.outerHTML = `
             <p style="
                font-size: 12px;
                color: #9a6700;
@@ -172,19 +181,18 @@ const addRestaurantsToMap = (restaurants, closestIndex) => {
                text-align: center;
             ">Menue ei löyty</p>
             `;
-            return;
-         }
+               return;
+            }
 
-         btn.addEventListener('click', async () => {
-            const id = btn.dataset.id;
-            const daily = await getDailyMenu(id, window.currentLang || 'fi');
-            const weekly = await getWeeklyMenu(id, window.currentLang || 'fi');
-            openMenuModal(restaurant.name, isClosest, false, daily, weekly);
-         }, { once: true });
-      }
-      catch (err) {
-         console.error('Error attaching popup handlers', err);
-      }
+            menuBtn.addEventListener('click', async () => {
+               const id = menuBtn.dataset.id;
+               const daily = await getDailyMenu(id, window.currentLang || 'fi');
+               const weekly = await getWeeklyMenu(id, window.currentLang || 'fi');
+               openMenuModal(restaurant.name, isClosest, false, daily, weekly, restaurant._id);
+            });
+         } catch (err) {
+            console.error('Error attaching popup handlers', err);
+         }
       });
    });
 };
@@ -203,7 +211,7 @@ const getUserLocation = () => {
                resolve(userLocation);
 
                // Move the map to the user's location
-               map.setView(userLocation, 10)
+               map.setView(userLocation, 10);
 
                // Add user location marker
                L.circleMarker(userLocation, {
@@ -211,8 +219,8 @@ const getUserLocation = () => {
                   fillColor: '#3b8beb',
                   color: '#fff',
                   weight: 2,
-                  fillOpacity: 1
-               }).addTo(map)
+                  fillOpacity: 1,
+               }).addTo(map);
 
                resolve(userLocation);
             },
@@ -223,24 +231,25 @@ const getUserLocation = () => {
                resolve(userLocation);
             }
          );
-      }
-      else {
+      } else {
          // If the browser does not support geolocation
          userLocation = defaultLocation;
          resolve(userLocation);
       }
-   })
+   });
 };
 
 /* alusta kartta */
 const initMap = () => {
-  map = L.map('map').setView(defaultLocation, 10);
+   map = L.map('map').setView(defaultLocation, 10);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    noWrap: true,
-    attribution: '&copy; OpenStreetMap',
-    maxBoundsViscosity: 1.0,
-    bounds: [[-90, -180], [90, 180]]
-  }).addTo(map);
+   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      noWrap: true,
+      attribution: '&copy; OpenStreetMap',
+      maxBoundsViscosity: 1.0,
+      bounds: [
+         [-90, -180],
+         [90, 180],
+      ],
+   }).addTo(map);
 };
-

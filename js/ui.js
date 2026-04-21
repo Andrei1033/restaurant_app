@@ -598,6 +598,8 @@ const handleFavouriteToggle = async (restaurantId, heartButton) => {
       if (result.success) {
          currentFavouriteId = null;
          if (heartButton) heartButton.classList.remove('active');
+         // Synkronoi kaikki sydämet (kortit + modal)
+         updateAllHeartButtons();
          showNotification('Suosikki poistettu', 'success');
 
          // Jos suosikkifiltteri on päällä, päivitä näkymä
@@ -786,10 +788,19 @@ const createCard = async (restaurant, isClosest) => {
 
    /* favourite button */
    const heartBtn = card.querySelector('.card_favourite');
-   heartBtn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      await handleFavouriteToggle(restaurant._id, heartBtn);
-   });
+   if (heartBtn) {
+      // Aseta alkuperäinen aktiivinen tila, jotta reloadissa näkyy oikein
+      if (currentFavouriteId && String(currentFavouriteId) === String(restaurant._id)) {
+         heartBtn.classList.add('active');
+      } else {
+         heartBtn.classList.remove('active');
+      }
+
+      heartBtn.addEventListener('click', async (e) => {
+         e.stopPropagation();
+         await handleFavouriteToggle(restaurant._id, heartBtn);
+      });
+   }
 
    /* show menu */
    if (hasMenu) {
@@ -873,13 +884,15 @@ const menuModal = document.getElementById('menu_modal');
 const menuModalBody = document.getElementById('menu_modal_body');
 const menuModalName = document.getElementById('menu_modal_name');
 const menuModalClosest = document.getElementById('menu_modal_closest');
-const menuModalFavourite = document.getElementById('menu_modal_favourite');
+let menuModalFavourite = document.getElementById('menu_modal_favourite');
 
 const initMenuModalFavourite = () => {
    const menuFavBtn = document.getElementById('menu_modal_favourite');
    if (menuFavBtn) {
       const newMenuFavBtn = menuFavBtn.cloneNode(true);
       menuFavBtn.parentNode.replaceChild(newMenuFavBtn, menuFavBtn);
+      // update stored reference to the live element
+      menuModalFavourite = newMenuFavBtn;
 
       newMenuFavBtn.addEventListener('click', async () => {
          if (currentRestaurantInMenu) {
@@ -889,12 +902,13 @@ const initMenuModalFavourite = () => {
 
             await handleFavouriteToggle(currentRestaurantInMenu, heartBtn);
 
-            // Päivitä menu-modalin sydän
-            if (menuModalFavourite) {
+            // Päivitä menu-modalin sydän (käytä live-elementtiä)
+            const liveMenuHeart = document.getElementById('menu_modal_favourite');
+            if (liveMenuHeart) {
                if (currentFavouriteId === currentRestaurantInMenu) {
-                  menuModalFavourite.classList.add('active');
+                  liveMenuHeart.classList.add('active');
                } else {
-                  menuModalFavourite.classList.remove('active');
+                  liveMenuHeart.classList.remove('active');
                }
             }
          }
@@ -910,12 +924,13 @@ window.openMenuModal = async (restaurantName, isClosest, isFavourite, dailyCours
 
    // Tarkista onko tämä ravintola suosikki
    const isFav = currentFavouriteId === restaurantId;
-   if (menuModalFavourite) {
-      // TURVALLISUUSTARKISTUS
+   // Käytä live-elementtiä varmistaaksemme että viittaus on oikea
+   const liveMenuFav = document.getElementById('menu_modal_favourite');
+   if (liveMenuFav) {
       if (isFav) {
-         menuModalFavourite.classList.add('active');
+         liveMenuFav.classList.add('active');
       } else {
-         menuModalFavourite.classList.remove('active');
+         liveMenuFav.classList.remove('active');
       }
    }
 
