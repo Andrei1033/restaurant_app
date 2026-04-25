@@ -33,6 +33,7 @@ const translations = {
       loginTitle: 'Kirjaudu sisään',
       loginUsername: 'Käyttäjänimi',
       loginPassword: 'Salasana',
+      loginClose: 'Sulje',
       loginSubmit: 'Kirjaudu',
       loginSwitch: 'Ei tiliä?',
       loginSwitchLink: 'Rekisteröidy',
@@ -42,6 +43,7 @@ const translations = {
       registerUsername: 'Käyttäjänimi',
       registerEmail: 'Sähköposti',
       registerEmailPlaceholder: 'sähköposti@example.com',
+      registerClose: 'Sulje',
       registerPassword: 'Salasana',
       registerSubmit: 'Rekisteröidy',
       registerSwitch: 'On jo tili?',
@@ -54,9 +56,16 @@ const translations = {
       profileEmail: 'Sähköposti',
       profilePassword: 'Uusi salasana',
       profilePasswordPlaceholder: 'Jätä tyhjäksi jos ei muutosta',
+      profileClose: 'Sulje',
       profileSave: 'Tallenna',
       profileChangeAvatar: 'Vaihda kuva',
       deleteAccount: 'Poista tili',
+
+      /* account delete modal */
+      accountDeleteTitle: 'Vahvista tilin poisto',
+      accountDeleteText: 'Oletko varma että haluat poistaa tilisi? Tämä toimintoa ei voi peruuttaa.',
+      accountCancel: 'Peruuta',
+      accountDeleteBtn: 'Poista tili',
 
       /* map popup */
       popupMenuBtn: 'Näytä menu',
@@ -126,6 +135,7 @@ const translations = {
       loginUsername: 'Username',
       loginPassword: 'Password',
       loginSubmit: 'Login',
+      loginClose: 'Close',
       loginSwitch: 'No account?',
       loginSwitchLink: 'Register',
 
@@ -136,6 +146,7 @@ const translations = {
       registerEmailPlaceholder: 'email@example.com',
       registerPassword: 'Password',
       registerSubmit: 'Register',
+      registerClose: 'Close',
       registerSwitch: 'Already have an account?',
       registerSwitchLink: 'Login',
 
@@ -148,7 +159,14 @@ const translations = {
       profilePasswordPlaceholder: 'Leave empty if no change',
       profileSave: 'Save',
       profileChangeAvatar: 'Change photo',
+      profileClose: 'Close',
       deleteAccount: 'Delete account',
+
+      /* account delete modal */
+      accountDeleteTitle: 'Confirm account deletion',
+      accountDeleteText: 'Are you sure you want to delete your account? This action cannot be undone.',
+      accountCancel: 'Cancel',
+      accountDeleteBtn: 'Delete account',
 
       /* map popup */
       popupMenuBtn: 'Show menu',
@@ -222,6 +240,7 @@ const applyLanguage = () => {
    document.getElementById('login_username').placeholder = t('loginUsername');
    document.getElementById('login_password').placeholder = t('loginPassword');
    document.getElementById('login_submit').textContent = t('loginSubmit');
+   document.getElementById('login_close').textContent = t('loginClose');
    document.getElementById('switch_to_register').textContent = t('loginSwitchLink');
 
    /* register modal */
@@ -234,6 +253,7 @@ const applyLanguage = () => {
    document.getElementById('register_password').placeholder = t('registerPassword');
    document.getElementById('register_submit').textContent = t('registerSubmit');
    document.getElementById('switch_to_login').textContent = t('registerSwitchLink');
+   document.getElementById('register_close').textContent = t('registerClose');
 
    /* profile modal */
    document.querySelector('#profile_modal h2').textContent = t('profileTitle');
@@ -245,7 +265,17 @@ const applyLanguage = () => {
    document.getElementById('profile_submit').textContent = t('profileSave');
    document.getElementById('logout_button').textContent = t('logout');
    document.getElementById('delete_account_button').textContent = t('deleteAccount');
+   document.getElementById('profile_close').textContent = t('profileClose');
 
+   /* account delete modal */
+   try {
+      document.querySelector('.aaa h3').textContent = t('accountDeleteTitle');
+      document.querySelector('.aaa p').textContent = t('accountDeleteText');
+      document.querySelector('#confirm_cancel_btn').textContent = t('accountCancel');
+      document.querySelector('#confirm_delete_btn').textContent = t('accountDeleteBtn');
+   } catch (e) {
+      console.log('Account delete modal not found, skipping language update for it' + e);
+   }
    /* footer */
    document.querySelector('footer').textContent = t('footer');
 

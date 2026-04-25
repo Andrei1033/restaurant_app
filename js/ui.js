@@ -330,8 +330,13 @@ const initProfileModal = () => {
       const newUploadBtn = uploadBtn.cloneNode(true);
       uploadBtn.parentNode.replaceChild(newUploadBtn, uploadBtn);
 
-      newUploadBtn.addEventListener('click', () => {
-         document.getElementById('profile_avatar_input').click();
+      newUploadBtn.addEventListener('click', (e) => {
+         e.preventDefault();
+         e.stopPropagation();
+         const input = document.getElementById('profile_avatar_input');
+         if (input) {
+            input.click();
+         }
       });
    }
 
@@ -379,12 +384,12 @@ const createConfirmModal = () => {
 
    const confirmModalHTML = `
       <div id="confirm_modal" class="modal-overlay">
-         <div class="modal confirm-modal">
-            <h3>${t('confirmDeleteTitle')}</h3>
-            <p>${t('confirmDeleteText')}</p>
+         <div class="modal confirm-modal aaa">
+            <h3>Vahvista tilin poisto</h3>
+            <p>Oletko varma että haluat poistaa tilisi? Tämä toimintoa ei voi peruuttaa.</p>
             <div class="modal-footer">
-               <button id="confirm_cancel_btn">${t('confirmCancel')}</button>
-               <button id="confirm_delete_btn" class="delete-account-btn">${t('confirmDeleteBtn')}</button>
+               <button id="confirm_cancel_btn">Peruuta</button>
+               <button id="confirm_delete_btn" class="delete-account-btn">Poista tili</button>
             </div>
          </div>
       </div>
